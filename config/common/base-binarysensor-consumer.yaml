@@ -1,0 +1,11 @@
+platform: template
+name: "${devicename} - Consumer on"
+# icon: mdi:power-plug-outline
+lambda: |-
+  if (id(power_wattage).state > ${consumer_min_wattage}) {
+    // consumer is active
+    return true;
+  } else {
+    // consumer is turned off.
+    return false;
+  }

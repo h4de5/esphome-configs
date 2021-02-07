@@ -1,0 +1,98 @@
+substitutions:
+  devicename: "sonoff_4chpro"
+  upper_devicename: "Sonoff 4CH Pro R2"
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp01_1m
+  board_flash_mode: dout
+
+uart:
+  baud_rate: 57600
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+
+<<: !include common/base.yaml
+
+# Device Specific Config
+
+binary_sensor:
+  - !include common/base-binarysensor-status.yaml
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - switch.toggle: "relay_1"
+    name: "${devicename} - Button 1"
+  - platform: gpio
+    pin:
+      number: GPIO9
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - switch.toggle: "relay_2"
+    name: "${devicename} - Button 2"
+  - platform: gpio
+    pin:
+      number: GPIO10
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - switch.toggle: "relay_3"
+    name: "${devicename} - Button 3"
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - switch.toggle: "relay_4"
+    name: "${devicename} - Button 4"
+
+switch:
+  - platform: gpio
+    name: "${devicename} - Relay 1"
+    pin: GPIO12
+    id: "relay_1"
+  - platform: gpio
+    name: "${devicename} - Relay 2"
+    pin: GPIO5
+    id: "relay_2"
+  - platform: gpio
+    name: "${devicename} - Relay 3"
+    pin: GPIO4
+    id: "relay_3"
+  - platform: gpio
+    name: "${devicename} - Relay 4"
+    pin: GPIO15
+    id: "relay_4"
+
+# output:
+#   # Register the blue LED as a dimmable output ....
+#   - platform: esp8266_pwm
+#     id: led_blue
+#     pin: GPIO13
+#     inverted: True
+
+# light:
+#   # ... and then make a light out of it.
+#   - platform: monochromatic
+#     name: "${devicename} Blue LED"
+#     output: led_blue
+
+output:
+  - platform: esp8266_pwm
+    id: led_blue
+    pin: GPIO13
+    inverted: True
+
+light:
+  - !include common/base-light-blue.yaml
+
+sensor:
+  - !include common/base-sensor-wifi.yaml
+  - !include common/base-sensor-uptime.yaml
+  - !include common/base-sensor-vcc.yaml

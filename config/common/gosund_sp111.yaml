@@ -1,0 +1,117 @@
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp8285
+
+<<: !include base.yaml
+
+# .base-sensor-wifi: !include &base-sensor-wifi base-sensor-wifi.yaml
+# .base-sensor-uptime: !include &base-sensor-uptime base-sensor-uptime.yaml
+# .base-sensor-wattage: !include &base-sensor-wattage base-sensor-wattage.yaml
+
+# config from: https://community.home-assistant.io/t/gosund-sp111-with-esphome-power-measurement/194477
+
+binary_sensor:
+  - !include base-binarysensor-status.yaml
+  - !include base-binarysensor-consumer.yaml
+  # switch relay off while holding
+  # - platform: gpio
+  #   id: button
+  #   internal: true
+  #   pin:
+  #     number: GPIO13
+  #   on_state:
+  #     - switch.toggle: relay
+
+  # toggle relay on/off
+  - platform: gpio
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLUP
+      inverted: True
+    # name: "${devicename} - Schalter Status"
+    id: "${devicename}_button_state"
+    on_press:
+      - switch.toggle: button_switch
+
+sensor:
+  - !include base-sensor-wifi.yaml
+  - !include base-sensor-uptime.yaml
+  - !include base-sensor-wattage.yaml
+  - !include base-sensor-vcc.yaml
+  # see pinout https://templates.blakadder.com/gosund_SP111_v1_1.html
+  - platform: hlw8012
+    sel_pin:
+      number: GPIO12
+      inverted: True
+    cf_pin: GPIO05
+    # cf1_pin: GPIO14
+    cf1_pin: GPIO04
+    # see: https://esphome.io/components/sensor/hlw8012.html?highlight=change_mode_every
+    change_mode_every: 4
+    current_resistor: ${current_res}
+    voltage_divider: ${voltage_div}
+    update_interval: 3s
+
+    current:
+      name: "${devicename} - Ampere"
+      unit_of_measurement: A
+      accuracy_decimals: 3
+      icon: mdi:current-ac
+
+    voltage:
+      name: "${devicename} - Volt"
+      unit_of_measurement: V
+      accuracy_decimals: 1
+      icon: mdi:flash-outline
+
+    power:
+      name: "${devicename} - Watt"
+      unit_of_measurement: W
+      id: "power_wattage"
+      icon: mdi:gauge
+
+status_led:
+  pin:
+    number: GPIO02
+    inverted: True
+  id: led_blue
+
+output:
+  - platform: gpio
+    pin: GPIO00
+    inverted: true
+    id: led_red
+
+switch:
+  - platform: template
+    name: "${devicename} - Schalter"
+    icon: mdi:power
+    optimistic: true
+    id: button_switch
+    turn_on_action:
+      - switch.turn_on: relay
+      # disable power led
+      # - light.turn_on: led_red_hass
+      # - output.turn_on: led_red
+    turn_off_action:
+      - switch.turn_off: relay
+      # disable power led
+      # - light.turn_off: led_red_hass
+      # - output.turn_off: led_red
+
+  - platform: gpio
+    pin: GPIO15
+    id: relay
+    # icon: mdi:power-socket-eu
+    # on_turn_on:
+    #   - output.turn_on: led_red
+    # on_turn_off:
+    #   - output.turn_off: led_red
+# light:
+#   # ... and then make a normal light out of it.
+#   - platform: binary
+#     name: "${devicename} - LED (Red)"
+#     output: led_red
+#     id: led_red_hass
+#     # icon: mdi:led-on

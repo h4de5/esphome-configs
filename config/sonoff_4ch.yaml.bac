@@ -1,0 +1,63 @@
+substitutions:
+  devicename: "sonoff_4ch"
+  upper_devicename: "Sonoff 4CH R2"
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp01_1m
+
+<<: !include common/base.yaml
+
+binary_sensor:
+  - !include common/base-binarysensor-status.yaml
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "${devicename} - Button 1"
+  - platform: gpio
+    pin:
+      number: GPIO9
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "${devicename} - Button 2"
+  - platform: gpio
+    pin:
+      number: GPIO10
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "${devicename} - Button 3"
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "${devicename} - Button 4"
+
+switch:
+  - platform: gpio
+    name: "${devicename} - Relay 1"
+    pin: GPIO12
+  - platform: gpio
+    name: "${devicename} - Relay 2"
+    pin: GPIO5
+  - platform: gpio
+    name: "${devicename} - Relay 3"
+    pin: GPIO4
+  - platform: gpio
+    name: "${devicename} - Relay 4"
+    pin: GPIO15
+
+output:
+  # Register the blue LED as a dimmable output ....
+  - platform: esp8266_pwm
+    id: blue_led
+    pin: GPIO13
+    inverted: True
+
+sensor:
+  - !include common/base-sensor-wifi.yaml
+  - !include common/base-sensor-uptime.yaml
+  - !include common/base-sensor-vcc.yaml

@@ -1,0 +1,4 @@
+docker-compose pull && docker-compose down && docker-compose up --force-recreate -d
+
+wget -q "https://esphome.io/_static/webserver-v1.min.css" -O "config/common/webserver-v1.min.css"
+wget -q "https://esphome.io/_static/webserver-v1.min.js" -O "config/common/webserver-v1.min.js"

@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  esphome:
+    #image: esphome/esphome:beta
+    #image: esphome/esphome:dev
+    image: esphome/esphome:latest
+    # devices:
+    # - "/dev/ttyUSB0:/dev/ttyUSB0"
+    # - "/dev/ttyS3:/dev/ttyUSB0"
+    # privileged: true
+    container_name: esphome
+    volumes:
+      - ./config:/config:rw
+      # Use local time for logging timestamps
+      - /etc/localtime:/etc/localtime:ro
+    # network_mode: host
+    ports:
+      - 6152:6052
+      - 6123:6123
+    restart: unless-stopped

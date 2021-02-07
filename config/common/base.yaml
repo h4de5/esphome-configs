@@ -1,0 +1,57 @@
+<<: !include wifi.yaml
+
+# for ota password change
+# needs to be put in gosund_sp111 or sonoff*.yaml
+# esphome:
+#   on_boot:
+#     - lambda: |-
+#         id(my_ota).set_auth_password("New password");
+
+# Enable logging
+logger:
+  baud_rate: 0
+  level: INFO
+
+# Enable Home Assistant API
+api:
+  # reboot_timeout: 15
+  # once home-assistant has added the device without passwords
+  # it won't ask for a newly set password again
+  # password: !secret api_password
+
+# Enable over the air updates
+ota:
+  password: !secret api_password
+
+# see: https://esphome.io/components/time.html
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# Enable Web server
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_password
+  # see: https://esphome.io/components/web_server.html
+  css_include: "common/webserver-v1.min.css"
+  css_url: ""
+  js_include: "common/webserver-v1.min.js"
+  js_url: ""
+
+text_sensor:
+  - platform: version
+    name: "${devicename} - Version"
+    icon: mdi:cube-outline
+  - platform: wifi_info
+    ip_address:
+      name: "${devicename} - IP"
+      icon: mdi:ip-network-outline
+    # ssid:
+    #   name: ESP Connected SSID
+    # bssid:
+    #   name: ESP Connected BSSID
+    mac_address:
+      name: "${devicename} - Mac"
+      icon: mdi:network-outline

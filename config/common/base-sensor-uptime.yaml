@@ -1,0 +1,10 @@
+platform: uptime
+name: ${devicename} - Uptime
+update_interval: 360s
+icon: mdi:clock-outline
+unit_of_measurement: h
+accuracy_decimals: 1
+filters:
+  # - multiply: 0.00027777777
+  # - lambda: return int((x + 1800.0) / 3600.0);
+  - lambda: return x / 3600.0;

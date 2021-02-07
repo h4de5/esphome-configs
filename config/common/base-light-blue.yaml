@@ -1,0 +1,9 @@
+# ... and then make a dimming light out of it.
+# ... and then make a light out of it.
+platform: monochromatic
+name: "${devicename} - LED (Blue)"
+output: led_blue
+id: led_blue_hass
+# icon: mdi:led-on
+restore_mode: ALWAYS_ON
+internal: true
