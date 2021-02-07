@@ -18,6 +18,12 @@ shutdown container:
 
     docker-compose down
 
+create a new secrets.yaml file:
+
+    echo 'wifi_name_home: "TheWIFI"' >> secrets.yaml
+    echo 'wifi_pass_home: "ThePassword"' >> secrets.yaml
+    echo 'api_password: "AnotherPassword"' >> secrets.yaml
+
 ## esphome commands
 
 when inside the container you can do the following:
