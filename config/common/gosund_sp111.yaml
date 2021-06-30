@@ -1,4 +1,5 @@
 esphome:
+  <<: !include esphome-boot.yaml
   name: $devicename
   platform: ESP8266
   board: esp8285

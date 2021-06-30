@@ -8,5 +8,8 @@ substitutions:
   voltage_div: "775"
   # minimum wattage to mark consumer as active
   consumer_min_wattage: "10"
+  # start on reboot
+  boot_status: "off"
+  boot_button: "button_switch"
 
 <<: !include common/gosund_sp111.yaml

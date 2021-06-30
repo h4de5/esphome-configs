@@ -1,0 +1,19 @@
+on_boot:
+  priority: 600
+  then:
+    - if:
+        condition:
+          lambda: |-
+            std::string status = "${boot_status}";
+            return status.compare("on") == 0;
+        then:
+          - switch.turn_on: "${boot_button}"
+          - logger.log: "Boot up switch ${boot_button} status: on"
+    - if:
+        condition:
+          lambda: |-
+            std::string status = "${boot_status}";
+            return status.compare("off") == 0;
+        then:
+          - switch.turn_off: "${boot_button}"
+          - logger.log: "Boot up switch ${boot_button} status: off"

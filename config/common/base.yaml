@@ -27,6 +27,7 @@ ota:
 time:
   - platform: homeassistant
     id: homeassistant_time
+    timezone: Europe/Vienna
 
 # Enable Web server
 web_server:
