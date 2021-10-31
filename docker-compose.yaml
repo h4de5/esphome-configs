@@ -15,6 +15,8 @@ services:
       # Use local time for logging timestamps
       - /etc/localtime:/etc/localtime:ro
     # network_mode: host
+    environment:
+      - ESPHOME_DASHBOARD_USE_PING=true
     ports:
       - 6152:6052
       - 6123:6123
