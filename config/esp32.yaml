@@ -2,9 +2,7 @@ substitutions:
   # steckdose waschmaschine
   devicename: "esp32_1"
   upper_devicename: "ESP32 1"
-  # minimum wattage to mark consumer as active
-  consumer_min_wattage: "10"
-  mac_address: "C4:7C:8D:6D:5C:4F"
+  mac_address: !secret esp_home_mac_1
 
 esphome:
   name: $devicename
@@ -13,31 +11,18 @@ esphome:
   # board: esp01_1m
   # board: nodemcu-32s
   # board: sp32doit-devkit-v1
+  # see: https://docs.platformio.org/en/latest/boards/espressif32/az-delivery-devkit-v4.html
   board: az-delivery-devkit-v4
 
 <<: !include common/base.yaml
 
+# see: https://esphome.io/components/esp32_ble_tracker.html#on-ble-advertise
 esp32_ble_tracker:
-
-# uart:
-#   rx_pin: RX
-#   baud_rate: 4800
-
-# binary_sensor:
-#   - !include common/base-binarysensor-status.yaml
-#   - !include common/base-binarysensor-consumer.yaml
-#   - platform: gpio
-#     pin:
-#       number: GPIO0
-#       mode: INPUT_PULLUP
-#       inverted: True
-#     name: "${devicename} - Schalter Status"
-#     on_press:
-#       - switch.toggle: button_switch
 
 sensor:
   - !include common/base-sensor-wifi.yaml
   - !include common/base-sensor-uptime.yaml
+  # see: https://esphome.io/components/sensor/xiaomi_ble.html?highlight=miflora#gcls002
   - platform: xiaomi_gcls002
     mac_address: "${mac_address}"
     temperature:
@@ -48,5 +33,6 @@ sensor:
       name: "${devicename} Soil Conductivity"
     illuminance:
       name: "${devicename} Illuminance"
+    # does not longer work
     # battery_level:
     #   name: "${devicename} Battery Level"
