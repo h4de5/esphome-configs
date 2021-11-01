@@ -5,10 +5,11 @@ services:
     #image: esphome/esphome:beta
     #image: esphome/esphome:dev
     image: esphome/esphome:latest
-    # devices:
-    # - "/dev/ttyUSB0:/dev/ttyUSB0"
+    devices:
+    #  - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/bus/usb:/dev/bus/usb"
     # - "/dev/ttyS3:/dev/ttyUSB0"
-    # privileged: true
+    privileged: true
     container_name: esphome
     volumes:
       - ./config:/config:rw
