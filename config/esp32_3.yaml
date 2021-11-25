@@ -1,0 +1,9 @@
+substitutions:
+  # lichterkette christbaum
+  devicename: "esp32_3"
+  upper_devicename: "ESP32 3"
+  # mac_address: !secret esp_home_mac_3
+
+<<: !include common/esp32.yaml
+
+
