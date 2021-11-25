@@ -11,3 +11,4 @@
 /secrets.yaml
 config/.gitignore
 wo-is-der-mist.txt
+**/@eaDir
