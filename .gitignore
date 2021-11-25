@@ -7,6 +7,7 @@
 **/lib/
 **/src/
 **/platformio.ini
+**/partitions.csv
 /secrets.yaml
 config/.gitignore
 wo-is-der-mist.txt
