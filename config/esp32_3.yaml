@@ -6,4 +6,67 @@ substitutions:
 
 <<: !include common/esp32.yaml
 
+esphome:
+  name: $devicename
+  platform: esp32
+  board: az-delivery-devkit-v4
+  includes:
+    - lambdas/colorTempToRGB.h
+    - lambdas/starsLambda.h
+  on_boot:
+    then:
+      #- light.turn_on: ${devicename}_WS2812b_Light
+      - light.turn_on:
+          id: WS2812b
+          # effect unten beim turn on handler einstellen!
+          #          effect: "starry sky"
+          #          effect: "color change"
+          #          brightness: 66%
+          brightness: 50%
 
+light:
+  # ... and then make a light out of it.
+  #  - platform: monochromatic
+  #    name: "${upper_devicename} Blue LED"
+  #    output: ${devicename}_led
+
+  - platform: fastled_clockless
+    name: "$devicename Licht"
+    chipset: WS2812b
+    # pin: D1
+    # U2 TX
+    pin: GPIO17
+    num_leds: 50
+    rgb_order: GRB
+
+    on_turn_on:
+      - light.turn_on:
+          id: WS2812b
+          effect: "Random Twinkle 20%"
+          # effect: "starry sky"
+          # effect: "candles"
+          # red: 1
+          # green: 0.75
+          # blue: 0.2
+          # effect: "color change"
+    id: WS2812b
+    effects:
+      - addressable_random_twinkle:
+      - addressable_random_twinkle:
+          name: Random Twinkle 20%
+          twinkle_probability: 20%
+          progress_interval: 32ms
+      - addressable_random_twinkle:
+          name: Random Twinkle 80%
+          twinkle_probability: 80%
+          progress_interval: 32ms
+      - addressable_scan:
+          scan_width: 4
+      - addressable_color_wipe:
+      - addressable_rainbow:
+      - addressable_fireworks:
+          name: "flash"
+          update_interval: 32ms
+          spark_probability: 30%
+          use_random_color: false
+          fade_out_rate: 120
