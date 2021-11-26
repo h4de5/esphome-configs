@@ -30,7 +30,7 @@ light:
   #    output: ${devicename}_led
 
   - platform: fastled_clockless
-    name: "$devicename Licht"
+    name: "$devicename - Licht"
     chipset: WS2812b
     # pin: D1
     # U2 TX
