@@ -10,9 +10,9 @@ esphome:
   name: $devicename
   platform: esp32
   board: az-delivery-devkit-v4
-  includes:
-    - lambdas/colorTempToRGB.h
-    - lambdas/starsLambda.h
+  # includes:
+  #   - lambdas/colorTempToRGB.h
+  #   - lambdas/starsLambda.h
   on_boot:
     then:
       #- light.turn_on: ${devicename}_WS2812b_Light
