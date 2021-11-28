@@ -2,7 +2,7 @@ substitutions:
   # ESP für mi flora
   devicename: "esp32_1"
   upper_devicename: "ESP32 1"
-  mi_flora_mac1: !secret mi_flora_mac_1
+  mi_flora_mac1: !secret mi_flora_mac1
 
 <<: !include common/esp32.yaml
 

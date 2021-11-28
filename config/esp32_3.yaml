@@ -32,12 +32,13 @@ light:
 
   - platform: fastled_clockless
     name: "$devicename - Licht"
-    chipset: WS2812b
+    chipset: WS2811
     # pin: D1
     # U2 TX
     pin: GPIO17
     num_leds: 50
-    rgb_order: GRB
+    # rgb_order: GRB
+    rgb_order: BRG
 
     on_turn_on:
       - light.turn_on:

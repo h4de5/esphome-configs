@@ -13,15 +13,13 @@ esphome:
   #   - lambdas/colorTempToRGB.h
   #   - lambdas/starsLambda.h
   on_boot:
+    priority: 800
     then:
       #- light.turn_on: ${devicename}_WS2812b_Light
       - light.turn_on:
           id: WS2812b
           # effect unten beim turn on handler einstellen!
-          #          effect: "starry sky"
-          #          effect: "color change"
-          #          brightness: 66%
-          brightness: 50%
+          brightness: 11%
 
 light:
   # ... and then make a light out of it.
@@ -31,19 +29,22 @@ light:
 
   - platform: fastled_clockless
     name: "$devicename - Licht"
+    icon: mdi:led-outline
     chipset: WS2812b
     # pin: D1
-    # U2 TX
+    # U2 TX 34
     pin: GPIO17
-    num_leds: 50
+    num_leds: 75
     rgb_order: GRB
-
     on_turn_on:
       - light.turn_on:
           id: WS2812b
-          effect: "Random Twinkle 20%"
+          effect: None
           # effect: "starry sky"
           # effect: "candles"
+          # red: 0.5
+          # green: 0.5
+          # blue: 0.5
           # red: 1
           # green: 0.75
           # blue: 0.2
@@ -59,7 +60,13 @@ light:
           name: Random Twinkle 80%
           twinkle_probability: 80%
           progress_interval: 32ms
+      - addressable_twinkle:
+          name: Twinkle Effect With Custom Values
+          twinkle_probability: 5%
+          progress_interval: 4ms
       - addressable_scan:
+          name: Scan
+          move_interval: 300ms
           scan_width: 4
       - addressable_color_wipe:
       - addressable_rainbow:

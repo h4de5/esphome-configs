@@ -1,1 +1,1 @@
-esphome gosund_sp111_*.yaml sonoff_*.yaml upload
+ls gosund_sp111_*.yaml sonoff_*.yaml esp32_*.yaml | xargs -n 1 -I {} esphome {} upload

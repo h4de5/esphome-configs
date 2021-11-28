@@ -1,1 +1,1 @@
-esphome gosund_sp111_*.yaml sonoff_*.yaml compile
+esphome gosund_sp111_*.yaml sonoff_*.yaml esp32_*.yaml compile
