@@ -34,13 +34,10 @@ sensor:
     # use an ADC1 pin
     pin: GPIO34
     # kein name, da internal
-    #name: "Light Brightness"
     id: "set_brightness"
     internal: true
     filters:
       - calibrate_linear:
-          #  - 0.0 -> 255
-          #  - 1.0 -> 0
           - 0.0 -> 0.0
           - 3.3 -> 1.0
       - lambda: |-
@@ -91,7 +88,6 @@ binary_sensor:
     pin:
       number: GPIO25
       mode: INPUT_PULLUP
-      # inverted: True
     on_press:
       - lambda: |-
           auto call = id(WS2812b).turn_on();
@@ -122,11 +118,6 @@ binary_sensor:
           call.perform();
 
 light:
-  # ... and then make a light out of it.
-  #  - platform: monochromatic
-  #    name: "${upper_devicename} Blue LED"
-  #    output: ${devicename}_led
-
   - platform: fastled_clockless
     name: "$devicename - Licht"
     icon: mdi:led-outline
