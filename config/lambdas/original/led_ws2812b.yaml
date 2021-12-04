@@ -1,0 +1,315 @@
+substitutions:
+  devicename: "led_ws2812b"
+  upper_devicename: "LED ws2812b"
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: d1_mini
+  includes:
+    - colorTempToRGB.h
+    - starsLambda.h
+  on_boot:
+    then:
+      #- light.turn_on: ${devicename}_WS2812b_Light
+      - light.turn_on:
+          id: WS2812b
+# effect unten beim turn on handler einstellen!
+#          effect: "starry sky"
+#          effect: "color change"
+#          brightness: 66%
+          brightness: 50%
+
+
+<<: !include common/base.yaml
+
+
+binary_sensor:
+  - !include common/base-binarysensor-status.yaml
+
+sensor:
+  - !include common/base-sensor-wifi.yaml
+  - !include common/base-sensor-uptime.yaml
+  - !include common/base-sensor-vcc.yaml
+
+switch:
+  - !include common/base-switch-reset.yaml
+
+# LED bei dem im garten scheint was korrodiert zu sein
+# output:
+#   # Register the green LED as a dimmable output ....
+#   - platform: esp8266_pwm
+#     id: "${devicename}_led"
+#     pin:
+#       #number: GPIO13
+#       number: GPIO02
+#       inverted: True
+
+light:
+  # ... and then make a light out of it.
+#  - platform: monochromatic
+#    name: "${upper_devicename} Blue LED"
+#    output: ${devicename}_led
+
+  - platform: fastled_clockless
+    chipset: WS2812b
+    pin: D1
+# led strip
+#    num_leds: 300
+    num_leds: 512
+    rgb_order: GRB
+# WS2811 outdoor:
+#    num_leds: 100
+#    num_leds: 150
+#    rgb_order: RGB
+#    gamma_correct: 2
+
+    on_turn_on:
+      - light.turn_on:
+          id: WS2812b
+          effect: "starry sky"
+#          effect: "candles"
+#          red: 1
+#          green: 0.75
+#          blue: 0.2
+#          effect: "color change"
+#  - platform: neopixelbus
+##    type: RGB
+##    variant: WS2812X
+#    variant: WS2812
+##    pin: GPIO3
+#    pin: GPIO2
+#    num_leds: 8
+##    method: ESP8266_DMA
+#    method: ESP8266_UART1
+##    rgb_order: BRG
+    name: "$upper_devicename WS2812b Light"
+    id: WS2812b
+    effects:
+      - addressable_random_twinkle:
+      - addressable_random_twinkle:
+          name: Random Twinkle 20%
+          twinkle_probability: 20%
+          progress_interval: 32ms
+      - addressable_random_twinkle:
+          name: Random Twinkle 80%
+          twinkle_probability: 80%
+          progress_interval: 32ms
+      - addressable_scan:
+          scan_width: 4
+      - addressable_color_wipe:
+      - addressable_rainbow:
+      - addressable_fireworks:
+          name: "flash"
+          update_interval: 32ms
+          spark_probability: 30%
+          use_random_color: false
+          fade_out_rate: 120
+      - addressable_lambda:
+          name: "Christmas RedGreenWhite"
+          lambda: |-
+            static uint8_t *xLedInc=NULL;
+            static int *xLedDim=NULL; // -255 ... 255
+            static ESPColor *xLedColor=NULL;
+            // ..... creates compiler warning .....
+            #define getColor() \
+                ESPColor color; \
+                switch( (int) floor( random_uint32() / (double(UINT32_MAX)+1) * 3)) { \
+                  case 0: color=light::ESPColor(255, 0, 18); break; \
+                  case 1: color=light::ESPColor(0, 179, 44); break; \
+                  default: color=light::ESPColor(255, 255, 255); break; \
+                } \
+                int dim=127+random_float()*128; \
+                xLedColor[i]=color*dim;
+            
+            if(xLedInc==NULL) {
+              xLedInc=new uint8_t[it.size()];
+              xLedDim=new int[it.size()];
+              xLedColor=new ESPColor[it.size()];
+              for(int i=0; i < it.size(); i++) {
+                xLedInc[i]=random_float()*8;
+                xLedDim[i]=random_float()*511-255;
+                getColor();
+                // ESP_LOGD(TAG, "init [%d]=> b:%d %02x %02x %02x   => %02x %02x %02x", i, dim, color.red, color.green, color.blue,  xLedColor[i].red,  xLedColor[i].green,  xLedColor[i].blue);
+              }
+            }
+            for (int i = 0; i <  it.size(); i++) {
+              int dim=255 - abs(xLedDim[i]);
+              ESPColor color=xLedColor[i] * dim;
+              // if(i==0) ESP_LOGD(TAG, "[0]=> b:%d %02x %02x %02x",dim, color.red, color.green, color.blue);
+              it[i] = color;
+              xLedDim[i]+=xLedInc[i];
+              if(xLedDim[i] > 255) {
+                xLedDim[i]=-255;
+                getColor();
+              }
+            }
+
+      - addressable_lambda:
+          name: "color change"
+          lambda: |-
+            static ESPColor *xLedTargetColor=NULL;
+            static ESPColor *xLedCurrColor=NULL;
+            
+            if(xLedTargetColor==NULL) {
+              xLedTargetColor=new ESPColor[it.size()];
+              xLedCurrColor=new ESPColor[it.size()];
+              for(int i=0; i < it.size(); i++) {
+                xLedCurrColor[i]=it[i].get();
+                xLedTargetColor[i]=ESPColor::random_color();
+                // ESPColor target= xLedTargetColor[i];
+                // ESP_LOGD(TAG, "init [%d]=> %02x %02x %02x", i, target.red, target.green, target.blue);
+              }
+            }
+            for (int i = 0; i <  it.size(); i++) {
+              ESPColor &c=xLedCurrColor[i];
+              ESPColor org=c;
+              ESPColor target= xLedTargetColor[i];
+              if(c.red == target.red && c.green == target.green && c.blue == target.blue) {
+                xLedTargetColor[i]=ESPColor::random_color();
+                // target= xLedTargetColor[i];
+                // ESP_LOGD(TAG, "init [%d]=> %02x %02x %02x", i, target.red, target.green, target.blue);
+              }
+              if(c.red < target.red) {
+                c.red++;
+              } else if(c.red > target.red) {
+                c.red--;
+              }
+              if(c.green < target.green) {
+                c.green++;
+              } else if(c.green > target.green) {
+                c.green--;
+              }
+              if(c.blue < target.blue) {
+                c.blue++;
+              } else if(c.blue > target.blue) {
+                c.blue--;
+              }
+              // ESP_LOGD(TAG, "change [%d]=> %02x %02x %02x  => %02x %02x %02x", i, c.red, c.green, c.blue, target.red, target.green, target.blue);
+            //            it[i].set_red(c.red+2);
+            //            it[i].set_green(c.green+2);
+            //            it[i].set_blue(c.blue);
+              // ESPColor x(c.red, c.green, c.blue);
+              // ESPColor x(10, 30, 60);
+              it[i] = c;
+              // if(i==0) ESP_LOGD(TAG, "change [%d]=> %02x %02x %02x  => %02x %02x %02x", i, org.red, org.green, org.blue,  it[i].get_red(), it[i].get_green(), it[i].get_blue());
+            }
+
+
+      - addressable_lambda:
+          name: "random shift"
+          update_interval: 16ms
+          lambda: |-
+            // it.size() - Number of LEDs
+            // it[num] - Access the LED at index num.
+            // Set the LED at num to the given r, g, b values
+            // it[num] = ESPColor(r, g, b);
+            // Get the color at index num (ESPColor instance)
+            // it[num].get();
+  
+            // Example: Simple color wipe
+            // every 3rd led ...
+            if(random_float() > 0.7)
+              it[0] = ESPColor::random_color();
+            else
+               it[0] = COLOR_BLACK;
+            for (int i = it.size() -1 ; i > 0; i--) {
+              it[i] = it[i - 1].get();
+            }
+  
+            // Bonus: use .range() and .all() to set many LEDs without having to write a loop.
+            //it.range(0, 50) = COLOR_BLACK;
+            //it.all().fade_to_black(10);
+  
+  
+      - addressable_lambda:
+          name: "starry sky"
+          update_interval: 10ms
+          lambda: |-
+            starsLambda(it); 
+            
+
+      - addressable_lambda:
+          name: "candles"
+          update_interval: 16ms
+          lambda: |-
+            static int *target=NULL;
+            static int *curr=NULL;
+            static int *inc=NULL;
+            static int *state=NULL;
+            static int *startState=NULL;
+            static int *stateLen=NULL;
+            static ESPColor *targetColor=NULL;
+            static ESPColor *currColor=NULL;
+            
+            // ESP_LOGD(TAG, "candle");
+            if(state==NULL) {
+              // ESP_LOGD(TAG, "candle mallocs");
+              target=new int[it.size()];
+              curr=new int[it.size()];
+              inc=new int[it.size()];
+              state=new int[it.size()];
+              startState=new int[it.size()];
+              stateLen=new int[it.size()];
+              targetColor=new ESPColor[it.size()];
+              currColor=new ESPColor[it.size()];
+              // ESP_LOGD(TAG, "candle mallocs done");
+            }
+            if(initial_run) {
+              // ESP_LOGD(TAG, "candle initial_run");
+              for(int i=0; i < it.size(); i++) {
+                // ESP_LOGD(TAG, "candle initial_run[%d]", i); delay(10);
+                curr[i]=0; target[i]=0; // curr==target => init
+                inc[i]=0; state[i]=0; startState[i]=0; stateLen[i]=0;
+                currColor[i] = it[i].get();
+                targetColor[i] = it[i].get();
+              }
+              // ESP_LOGD(TAG, "candle initial_run done"); delay(10);
+            }
+            for (int i = 0; i < it.size() ; i++) {
+              // ESP_LOGD(TAG, "candle [%d]", i); delay(10);
+              if(state[i] == 0 || state[i] > 500) {
+                state[i] = random(500); // random delay till first flicker
+                target[i] = curr[i]; // init new target
+              }
+              // set new target if target reached
+              if(state[i] == 450 || (curr[i] == target[i] && state[i] > 450)) { // 10% is disturbed candle
+                target[i]=random(50, 255);
+                inc[i]=random(50)+1;
+                currColor[i]=targetColor[i];
+                targetColor[i]=current_color+ESPColor::random_color()*random(100);
+                stateLen[i]=abs(target[i]-curr[i]) / inc[i];
+                startState[i]=state[i];
+              } else if(curr[i] == target[i]) { // slow changing candle
+                target[i]=random(80, 160);
+                inc[i]=random(10)+1;
+                currColor[i]=targetColor[i];
+                targetColor[i]=current_color+ESPColor::random_color()*random(40);
+                stateLen[i]=abs(target[i]-curr[i]) / inc[i];
+                startState[i]=state[i];
+              }
+              // ESP_LOGD(TAG, "candle [%d]2", i); delay(10);
+              if(curr[i] > target[i]) {
+                curr[i]-=min(inc[i], curr[i]-target[i]);
+              } else {
+                curr[i]+=min(inc[i], target[i]-curr[i]);
+              }
+              // ESP_LOGD(TAG, "candle [%d]3", i); delay(10);
+              int factor=255;
+              if(stateLen[i] > 0) factor = 255 * (state[i] - startState[i]) / (stateLen[i]);
+              ESPColor c=currColor[i]*(factor*(curr[i]+1)/256) + targetColor[i]*((255-factor)*(curr[i]+1)/256);
+              it[i]=c;
+              // it[i]=it[i]*curr[i];
+              state[i]++;
+              // if(i==0) ESP_LOGD(TAG, "candle [0]=> t:%d c:%d inc:%d state:%d startState:%d stateLen:%d factor:%d cc:%02x tc:%02x out=%02x", 
+              //  target[i], curr[i], inc[i], state[i], startState[i], stateLen[i], 
+              //  factor, currColor[i].red, targetColor[i].red, c.red);
+            }
+
+status_led:
+  pin:
+    number: GPIO02
+    #inverted: True
+    inverted: False
+  id: led_blue
+

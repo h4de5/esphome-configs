@@ -3,9 +3,12 @@
 class StarInfo {
   public:
     StarInfo():
-      ledNumber(-1), brightness(0), brightnessInc(0), delay(0), delayWait(0), color(0) {};
+      // ledNumber(-1), brightness(0), brightnessInc(0), delay(0), delayWait(0), color(0) {};
+      ledNumber(-1), brightness(0), brightnessInc(0), delayWait(0), color(0) { delay=0; } ;
     StarInfo(int ledNumber, int brightness, int brightnessInc, byte delay, byte delayWait, Color color):
-      ledNumber(ledNumber), brightness(brightness), brightnessInc(brightnessInc), delay(delay), delayWait(delayWait), color(color) {};
+      ledNumber(ledNumber), brightness(brightness), brightnessInc(brightnessInc), delayWait(delayWait), color(color) {
+        this->delay=delay;
+      };
 
   int ledNumber;
   int brightness; // -255 ... 255
