@@ -2,15 +2,47 @@ substitutions:
   # ESP für mi flora
   devicename: "esp32_1"
   upper_devicename: "ESP32 1"
-  mi_flora_mac1: !secret mi_flora_mac1
 
 <<: !include common/esp32.yaml
+
+# see: https://esphome.io/components/esp32_ble_tracker.html#on-ble-advertise
+esp32_ble_tracker:
+
+esphome:
+  name: $devicename
+  platform: esp32
+  board: az-delivery-devkit-v4
+  # on_boot:
+  #   priority: 800
+  #   then:
+  #     #- light.turn_on: ${devicename}_WS2812b_Light
+  #     - light.turn_on:
+  #         id: WS2812b
+  #         # effect unten beim turn on handler einstellen!
+  #         brightness: 11%
+  
+# https://esphome.io/components/esp32_ble_tracker.html
+binary_sensor:
+  - platform: ble_presence
+    mac_address: !secret mi_flora_mac1
+    name: "${devicename} Presence"
+  - platform: ble_presence
+    mac_address: !secret mi_flora_mac2
+    name: "${devicename} Presence 2"
 
 sensor:
   - !include common/base-sensor-wifi.yaml
   - !include common/base-sensor-uptime.yaml
+  
+  - platform: ble_rssi
+    mac_address: !secret mi_flora_mac1
+    name: "${devicename} RSSI value"
+  - platform: ble_rssi
+    mac_address: !secret mi_flora_mac2
+    name: "${devicename} RSSI value 2"
+    
   - platform: xiaomi_gcls002
-    mac_address: "${mi_flora_mac1}"
+    mac_address: !secret mi_flora_mac1
     temperature:
       name: "${devicename} Temperature"
     moisture:
@@ -19,6 +51,26 @@ sensor:
       name: "${devicename} Soil Conductivity"
     illuminance:
       name: "${devicename} Illuminance"
+  - platform: xiaomi_gcls002
+    mac_address: !secret mi_flora_mac2
+    temperature:
+      name: "${devicename} Temperature 2"
+    moisture:
+      name: "${devicename} Moisture 2"
+    conductivity:
+      name: "${devicename} Soil Conductivity 2"
+    illuminance:
+      name: "${devicename} Illuminance 2"
     # does no longer work
     # battery_level:
     #   name: "${devicename} Battery Level"
+  # - platform: ble_rssi
+  #   mac_address: !secret fitness_tracker
+  #   name: "${devicename} Tracker Signal" 
+
+status_led:
+  pin:
+    number: GPIO02
+    #inverted: True
+    inverted: False
+  id: led_blue

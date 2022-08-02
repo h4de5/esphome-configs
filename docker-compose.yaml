@@ -6,7 +6,7 @@ services:
     #image: esphome/esphome:dev
     image: esphome/esphome:latest
     devices:
-    #  - "/dev/ttyUSB0:/dev/ttyUSB0"
+      #  - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/bus/usb:/dev/bus/usb"
     # - "/dev/ttyS3:/dev/ttyUSB0"
     privileged: true
@@ -17,6 +17,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     # network_mode: host
     environment:
+      - com.centurylinklabs.watchtower.enable=1
       - ESPHOME_DASHBOARD_USE_PING=true
     ports:
       - 6152:6052

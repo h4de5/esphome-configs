@@ -1,0 +1,8 @@
+includes:
+  - lambdas/colorTempToRGB.h
+  - lambdas/starsLambda.h
+  - lambdas/christmas.h
+  - lambdas/colorchange.h
+  - lambdas/randomshift.h
+  - lambdas/candles.h
+  - lambdas/flicker.h

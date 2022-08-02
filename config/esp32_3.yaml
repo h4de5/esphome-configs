@@ -9,15 +9,13 @@ globals:
     restore_value: yes
     initial_value: "0"
 
-<<: !include common/esp32.yaml
+<<: !include common/esp32-lights.yaml
 
 esphome:
+  <<: !include common/base-light-effects-lambdas.yaml
   name: $devicename
   platform: esp32
   board: az-delivery-devkit-v4
-  includes:
-    - lambdas/colorTempToRGB.h
-    - lambdas/starsLambda.h
   on_boot:
     priority: 800
     then:
@@ -108,7 +106,18 @@ binary_sensor:
             call.set_effect("Rainbow");
           else if (id(current_effect) == 7)
             call.set_effect("Fireworks");
-
+          else if (id(current_effect) == 8)
+            call.set_effect("Christmas");
+          else if (id(current_effect) == 9)
+            call.set_effect("Color change");
+          else if (id(current_effect) == 10)
+            call.set_effect("Random shift");
+          else if (id(current_effect) == 11)
+            call.set_effect("Starry sky");
+          else if (id(current_effect) == 12)
+            call.set_effect("Candles");
+          else if (id(current_effect) == 13)
+            call.set_effect("Flicker");
           else {
               call.set_effect("None");
               id(current_effect) = -1;

@@ -37,7 +37,7 @@ const int cometBrightnessInc=15; // comet runs from -255 ... 255 => higher value
 static int cometLedNumber=-1;
 static int cometBrightness=-255;
 
-#define TAG "starsLambda"
+// #define TAG "starsLambda"
 
 void starsLambda(AddressableLight &it) {
 	// it.size() - Number of LEDs
@@ -71,8 +71,8 @@ void starsLambda(AddressableLight &it) {
 			// stars[i].delayWait=stars[i].delay + random_float() * 255; // add some randomness to initial Delay
 			stars[i].delayWait=0;
 			stars[i].brightness=-255;
-			ESP_LOGD(TAG, "init star [%d] =>%d - r:%f - k:%d=%02x %02x %02x initDelay=%d", i, stars[i].ledNumber, r, k,
-				stars[i].color.red, stars[i].color.green, stars[i].color.blue, stars[i].delayWait);
+			// ESP_LOGD(TAG, "init star [%d] =>%d - r:%f - k:%d=%02x %02x %02x initDelay=%d", i, stars[i].ledNumber, r, k,
+				// stars[i].color.red, stars[i].color.green, stars[i].color.blue, stars[i].delayWait);
 		} else {
 			if(stars[i].delayWait == 0) {
 				stars[i].delayWait = stars[i].delay;

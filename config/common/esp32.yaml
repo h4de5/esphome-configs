@@ -1,21 +1,8 @@
 <<: !include base.yaml
 
-# see: https://esphome.io/components/esp32_ble_tracker.html#on-ble-advertise
-esp32_ble_tracker:
-
 sensor:
   - !include base-sensor-wifi.yaml
   - !include base-sensor-uptime.yaml
-# light:
-#   - platform: monochromatic
-#     name: "$upper_devicename LED"
-#     output: gpio_19
-#     id: dac_light1
-
-# output:
-#   - platform: ledc
-#     pin: GPIO19
-#     id: gpio_19
 
 binary_sensor:
   - !include base-binarysensor-status.yaml

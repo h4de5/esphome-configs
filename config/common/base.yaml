@@ -1,5 +1,6 @@
 <<: !include wifi.yaml
 
+# see: https://esphome.io/components/ota.html
 # for ota password change
 # needs to be put in gosund_sp111 or sonoff*.yaml
 # esphome:
@@ -21,7 +22,19 @@ api:
 
 # Enable over the air updates
 ota:
+  safe_mode: true
   password: !secret api_password
+  on_begin:
+    then:
+      - logger.log: "OTA start"
+  on_end:
+    then:
+      - logger.log: "OTA end"
+  on_error:
+    then:
+      - logger.log:
+          format: "OTA update error %d"
+          args: ["x"]
 
 # see: https://esphome.io/components/time.html
 time:
@@ -32,14 +45,19 @@ time:
 # Enable Web server
 web_server:
   port: 80
+  local: true
   auth:
-    username: admin
+    username: !secret api_username
     password: !secret api_password
   # see: https://esphome.io/components/web_server.html
-  css_include: "common/webserver-v1.min.css"
-  css_url: ""
-  js_include: "common/webserver-v1.min.js"
-  js_url: ""
+  # css_include: "common/webserver-v1.min.css"
+  # css_url: ""
+  # js_include: "common/webserver-v1.min.js"
+  # js_url: ""
+  # see: https://esphome.io/components/web_server.html#here-be-dragons
+  version: 2
+  # js_include: "common/webserver-v2.min.js"
+
 
 text_sensor:
   - platform: version

@@ -1,0 +1,6 @@
+<<: !include esp32.yaml
+
+wled:
+e131:
+  # method: unicast
+  method: multicast
