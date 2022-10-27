@@ -28,6 +28,7 @@ effects:
       spark_probability: 20%
       use_random_color: true
       fade_out_rate: 120
+
   - addressable_lambda:
       name: "Christmas"
       lambda: |-
@@ -61,6 +62,12 @@ effects:
       update_interval: 16ms
       lambda: |-
         flicker(it, initial_run, current_color);
+
+  # - addressable_lambda:
+  #     name: "Wakeup"
+  #     update_interval: 16ms
+  #     lambda: |-
+  #       wakeup(it, 60*15);
 
   - wled:
       port: 19446
