@@ -134,7 +134,8 @@ light:
     # pin: D1
     # use an U2 TX pin
     pin: GPIO17
-    num_leds: 100
+    # half of the leds burned out
+    num_leds: 64
     # rgb_order: BRG
     # rgb_order: GRB
     rgb_order: RGB

@@ -1,7 +1,7 @@
 substitutions:
   # steckdose Lüftung Terrasse
   devicename: "sonoff_d1"
-  upper_devicename: "Sonoff D1 Dimmer"
+  upper_devicename: "Sonoff D1"
   # minimum wattage to mark consumer as active
   consumer_min_wattage: "10"
 
@@ -31,7 +31,10 @@ sensor:
 light:
   - platform: sonoff_d1
     use_rm433_remote: False
-    name: Lüftung Terrasse
+    name: "${devicename} Lüftung Terrasse"
     restore_mode: RESTORE_DEFAULT_OFF
     gamma_correct: 0.0
     default_transition_length: 1s
+  - platform: status_led
+    name: "${devicename} - Blue LED"
+    pin: GPIO13

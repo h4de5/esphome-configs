@@ -1,0 +1,22 @@
+substitutions:
+  # ESP
+  devicename: "esp32_5"
+  upper_devicename: "ESP32 5"
+
+<<: !include common/esp32.yaml
+
+esphome:
+  name: $devicename
+  platform: esp32
+  board: az-delivery-devkit-v4
+
+sensor:
+  - !include common/base-sensor-wifi.yaml
+  - !include common/base-sensor-uptime.yaml
+
+status_led:
+  pin:
+    number: GPIO02
+    #inverted: True
+    inverted: False
+  id: led_blue

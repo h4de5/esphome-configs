@@ -80,7 +80,7 @@ switch:
 # light:
 #   # ... and then make a light out of it.
 #   - platform: monochromatic
-#     name: "${devicename} Blue LED"
+#     name: "${devicename} - Blue LED"
 #     output: led_blue
 
 output:
