@@ -1,18 +1,47 @@
 substitutions:
-  # ESP
+  # ESP ambilight Tv Wohnzimmer
   devicename: "esp32_6"
   upper_devicename: "ESP32 6"
 
-<<: !include common/esp32.yaml
+<<: !include common/esp32-lights.yaml
 
 esphome:
+  <<: !include common/base-light-effects-lambdas.yaml
   name: $devicename
   platform: esp32
   board: az-delivery-devkit-v4
 
-sensor:
-  - !include common/base-sensor-wifi.yaml
-  - !include common/base-sensor-uptime.yaml
+light:
+  # ... and then make a light out of it.
+  #  - platform: monochromatic
+  #    name: "${upper_devicename} Blue LED"
+  #    output: ${devicename}_led
+
+  - platform: fastled_clockless
+    # - platform: neopixelbus
+    name: "$devicename - Licht"
+    icon: mdi:led-outline
+    chipset: WS2812b
+    # variant: WS2812X
+    # pin: D1
+    # U2 TX 34
+    pin: GPIO17
+    num_leds: 116
+    rgb_order: GRB
+    # type: GRB
+    on_turn_on:
+      - light.turn_on:
+          id: WS2812b
+          #effect: "None"
+          red: 1
+          green: 1
+          blue: 1
+          # red: 1
+          # green: 0.75
+          # blue: 0.2
+          effect: "e131"
+    id: WS2812b
+    <<: !include common/base-light-effects.yaml
 
 status_led:
   pin:
