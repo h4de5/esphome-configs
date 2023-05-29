@@ -51,6 +51,14 @@ light:
     id: WS2812b
     <<: !include common/base-light-effects.yaml
 
+sensor:
+  - !include common/base-sensor-wifi.yaml
+  - !include common/base-sensor-uptime.yaml
+  # - platform: adc
+  #     pin: VCC
+  #     name: "${devicename} - VCC Volt"
+  #     icon: mdi:flash-outline
+
 status_led:
   pin:
     number: GPIO02

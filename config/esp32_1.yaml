@@ -70,20 +70,54 @@ sensor:
     model: AM2302
     temperature:
       name: "$upper_devicename - Temperatur"
+      # unique_id: "sensor.${devicename}_temperatur_roh"
       # Optional variables:
       unit_of_measurement: "°C"
       icon: "mdi:thermometer"
       device_class: "temperature"
       state_class: "measurement"
       accuracy_decimals: 1
+      filters:
+        - quantile:
+            window_size: 5
+            send_every: 3
+            # send_first_at: 3
+            quantile: .9
+
     humidity:
       name: "$upper_devicename - Luftfeuchtigkeit"
+      # unique_id: "sensor.${devicename}_luftfeuchtigkeit_roh"
       unit_of_measurement: "%"
       icon: "mdi:water-percent"
       device_class: "humidity"
       state_class: "measurement"
       accuracy_decimals: 1
-    update_interval: 30s
+      filters:
+        - quantile:
+            window_size: 5
+            send_every: 3
+            # send_first_at: 3
+            quantile: .9
+
+    update_interval: 10s
+
+  #- platform: filter 
+  #  name: "$upper_devicename - Temperatur"
+  #  unique_id: "sensor.${devicename}_temperatur"
+  #  entity_id: "sensor.${devicename}_temperatur_roh"
+  #  filters: 
+  #    - filter: outlier
+  #      window_size: 2
+  #      radius: 1.5
+
+  #- platform: filter 
+  #  name: "$upper_devicename - Luftfeuchtigkeit"
+  #  unique_id: "sensor.${devicename}_luftfeuchtigkeit"
+  #  entity_id: "sensor.${devicename}_luftfeuchtigkeit_roh"
+  #  filters: 
+  #    - filter: outlier
+  #      window_size: 3
+  #      radius: 5.0
 
   # - platform: ble_rssi
   #   mac_address: !secret mi_flora_mac1
