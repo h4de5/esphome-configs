@@ -11,13 +11,13 @@ esphome:
   platform: esp32
   board: az-delivery-devkit-v4
   on_boot:
-    priority: 800
+    priority: 500
     then:
       #- light.turn_on: ${devicename}_WS2812b_Light
       - light.turn_on:
           id: WS2812b
           # effect unten beim turn on handler einstellen!
-          brightness: 12%
+          brightness: 25%
 
 light:
   # ... and then make a light out of it.
@@ -40,13 +40,10 @@ light:
     on_turn_on:
       - light.turn_on:
           id: WS2812b
-          effect: None
-          red: 0.20
-          green: 0.12
-          blue: 0.12
-          # red: 1
-          # green: 0.75
-          # blue: 0.2
+          # effect: "Color change"
+          # red: 0.25
+          # green: 0.25
+          # blue: 0.25
           # effect: "e131"
     id: WS2812b
     <<: !include common/base-light-effects.yaml
