@@ -2,11 +2,13 @@ substitutions:
   # steckdose waschmaschine
   devicename: "sonoff_pow_r2"
   upper_devicename: "Sonoff POW R2"
+  devicecomment: "Keller Waschmaschine"
   # minimum wattage to mark consumer as active
   consumer_min_wattage: "10"
 
 esphome:
   name: $devicename
+  comment: $devicecomment
   platform: ESP8266
   board: esp01_1m
   board_flash_mode: dout

@@ -30,35 +30,35 @@ effects:
       fade_out_rate: 120
 
   - addressable_lambda:
-      name: "Christmas"
+      name: Christmas
       lambda: |-
         christmas(it);
 
   - addressable_lambda:
-      name: "Color change"
+      name: Color change
       lambda: |-
         colorchange(it);
 
   - addressable_lambda:
-      name: "Random shift"
+      name: Random shift
       update_interval: 16ms
       lambda: |-
         randomshift(it);
 
   - addressable_lambda:
-      name: "Starry sky"
+      name: Starry sky
       update_interval: 10ms
       lambda: |-
         starsLambda(it);
 
   - addressable_lambda:
-      name: "Candles"
+      name: Candles
       update_interval: 16ms
       lambda: |-
         candles(it, initial_run);
 
   - addressable_lambda:
-      name: "Flicker"
+      name: Flicker
       update_interval: 16ms
       lambda: |-
         flicker(it, initial_run, current_color);
@@ -69,8 +69,11 @@ effects:
   #     lambda: |-
   #       wakeup(it, 60*15);
 
-  - wled:
-      port: 19446
+  # disable wled because nobody is using it
+  # - wled:
+  #     name: "wled"
+  #     port: 19446
   - e131:
+      # set with e131 on boot or by E1.31 in automations
       universe: 1
       channels: RGB

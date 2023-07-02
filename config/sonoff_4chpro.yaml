@@ -1,9 +1,11 @@
 substitutions:
   devicename: "sonoff_4chpro"
   upper_devicename: "Sonoff 4CH Pro R2"
+  devicecomment: "Garage Beregnung"
 
 esphome:
   name: $devicename
+  comment: $devicecomment
   platform: ESP8266
   board: esp01_1m
   board_flash_mode: dout

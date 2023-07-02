@@ -1,7 +1,8 @@
 substitutions:
-  # Steckdose Kodi rpi
+  # Steckdose Serverschrank
   devicename: "gosund_sp111_1"
   upper_devicename: "Gosund SP111 1"
+  devicecomment: "Keller Serverschrank"
   # Higher value gives lower watt readout
   current_res: "0.00280"
   # Lower value gives lower voltage readout

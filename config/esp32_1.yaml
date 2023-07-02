@@ -1,163 +1,38 @@
 substitutions:
-  # ESP für mi flora
+  # ESP für Büro
   devicename: "esp32_1"
   upper_devicename: "ESP32 1"
+  devicecomment: "Büro - DHT + RGB LED"
+  number_leds: "1"
+  boot_brightness: "10%"
+  boot_effect: "none"
+  dht_gpio: "GPIO33"
 
 <<: !include common/esp32-lights.yaml
-
-esphome:
-  <<: !include common/base-light-effects-lambdas.yaml
-  name: $devicename
-  platform: esp32
-  board: az-delivery-devkit-v4
-  # on_boot:
-  #   priority: 800
-  #   then:
-  #     #- light.turn_on: ${devicename}_WS2812b_Light
-  #     - light.turn_on:
-  #         id: WS2812b
-  #         # effect unten beim turn on handler einstellen!
-  #         brightness: 12%
-
-light:
-  # ... and then make a light out of it.
-  #  - platform: monochromatic
-  #    name: "${upper_devicename} Blue LED"
-  #    output: ${devicename}_led
-
-  - platform: fastled_clockless
-    # - platform: neopixelbus
-    name: "$devicename - Licht"
-    icon: mdi:led-outline
-    chipset: WS2812b
-    # variant: WS2812X
-    # pin: D1
-    # U2 TX 34
-    pin: GPIO17
-    num_leds: 1
-    rgb_order: GRB
-    # type: GRB
-    on_turn_on:
-      - light.turn_on:
-          id: WS2812b
-          effect: None
-          red: 0.07
-          green: 0.05
-          blue: 0.07
-          # red: 1
-          # green: 0.75
-          # blue: 0.2
-          # effect: "e131"
-    id: WS2812b
-    <<: !include common/base-light-effects.yaml
-
-# binary_sensor:
-#   - platform: ble_presence
-#     mac_address: !secret mi_flora_mac1
-#     name: "${devicename} Presence"
-#   - platform: ble_presence
-#     mac_address: !secret mi_flora_mac2
-#     name: "${devicename} Presence 2"
+# <<: !include common/esp32.yaml
 
 sensor:
   - !include common/base-sensor-wifi.yaml
   - !include common/base-sensor-uptime.yaml
-  
-  - platform: dht
-    pin:
-      number: GPIO13
-      mode: INPUT_PULLUP
-    model: AM2302
-    temperature:
-      name: "$upper_devicename - Temperatur"
-      # unique_id: "sensor.${devicename}_temperatur_roh"
-      # Optional variables:
-      unit_of_measurement: "°C"
-      icon: "mdi:thermometer"
-      device_class: "temperature"
-      state_class: "measurement"
-      accuracy_decimals: 1
-      filters:
-        - quantile:
-            window_size: 5
-            send_every: 3
-            # send_first_at: 3
-            quantile: .9
+  - !include common/ext-sensor-dht.yaml
+# mdns:
+#   disabled: true
 
-    humidity:
-      name: "$upper_devicename - Luftfeuchtigkeit"
-      # unique_id: "sensor.${devicename}_luftfeuchtigkeit_roh"
-      unit_of_measurement: "%"
-      icon: "mdi:water-percent"
-      device_class: "humidity"
-      state_class: "measurement"
-      accuracy_decimals: 1
-      filters:
-        - quantile:
-            window_size: 5
-            send_every: 3
-            # send_first_at: 3
-            quantile: .9
+# media_player:
+#   - platform: i2s_audio
+#     name: "$devicename - Media Player"
+#     dac_type: external
+#     i2s_dout_pin: GPIO22
+#     # mute_pin: GPIO25
+#     mode: stereo
+#     i2s_audio_id: my_i2s_audio
 
-    update_interval: 10s
+# i2s_audio:
+#   i2s_lrclk_pin: GPIO33
+#   i2s_bclk_pin: GPIO19
+#   id: my_i2s_audio
 
-  #- platform: filter 
-  #  name: "$upper_devicename - Temperatur"
-  #  unique_id: "sensor.${devicename}_temperatur"
-  #  entity_id: "sensor.${devicename}_temperatur_roh"
-  #  filters: 
-  #    - filter: outlier
-  #      window_size: 2
-  #      radius: 1.5
-
-  #- platform: filter 
-  #  name: "$upper_devicename - Luftfeuchtigkeit"
-  #  unique_id: "sensor.${devicename}_luftfeuchtigkeit"
-  #  entity_id: "sensor.${devicename}_luftfeuchtigkeit_roh"
-  #  filters: 
-  #    - filter: outlier
-  #      window_size: 3
-  #      radius: 5.0
-
-  # - platform: ble_rssi
-  #   mac_address: !secret mi_flora_mac1
-  #   name: "${devicename} RSSI value"
-  # - platform: ble_rssi
-  #   mac_address: !secret mi_flora_mac2
-  #   name: "${devicename} RSSI value 2"
-
-  # - platform: xiaomi_gcls002
-  #   mac_address: !secret mi_flora_mac1
-  #   temperature:
-  #     name: "${devicename} Temperature"
-  #   moisture:
-  #     name: "${devicename} Moisture"
-  #   conductivity:
-  #     name: "${devicename} Soil Conductivity"
-  #   illuminance:
-  #     name: "${devicename} Illuminance"
-  # - platform: xiaomi_gcls002
-  #   mac_address: !secret mi_flora_mac2
-  #   temperature:
-  #     name: "${devicename} Temperature 2"
-  #   moisture:
-  #     name: "${devicename} Moisture 2"
-  #   conductivity:
-  #     name: "${devicename} Soil Conductivity 2"
-  #   illuminance:
-  #     name: "${devicename} Illuminance 2"
-
-#
-#     # does no longer work
-#     # battery_level:
-#     #   name: "${devicename} Battery Level"
 #   # - platform: ble_rssi
 #   #   mac_address: !secret fitness_tracker
 #   #   name: "${devicename} Tracker Signal"
 
-status_led:
-  pin:
-    number: GPIO02
-    #inverted: True
-    inverted: False
-  id: led_blue

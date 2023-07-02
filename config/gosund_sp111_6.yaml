@@ -2,6 +2,7 @@ substitutions:
   # steckdose kühlschrank
   devicename: "gosund_sp111_6"
   upper_devicename: "Gosund SP111 6"
+  devicecomment: "Küche Kühlschrank"
   # Higher value gives lower watt readout
   current_res: "0.00280"
   # Lower value gives lower voltage readout

@@ -1,10 +1,15 @@
-esphome:
-  <<: !include esphome-boot.yaml
-  name: $devicename
-  platform: ESP8266
-  board: esp8285
-
 <<: !include base.yaml
+
+esphome:
+  <<: !include esphome-boot_status.yaml
+  name: $devicename
+  comment: $devicecomment
+
+esp8266:
+  # platform: ESP8266
+  board: esp8285
+  framework:
+    version: recommended
 
 # .base-sensor-wifi: !include &base-sensor-wifi base-sensor-wifi.yaml
 # .base-sensor-uptime: !include &base-sensor-uptime base-sensor-uptime.yaml

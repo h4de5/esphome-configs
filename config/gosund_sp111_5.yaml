@@ -1,7 +1,8 @@
 substitutions:
-  # steckdose christbaum
+  # steckdose Wasserboiler
   devicename: "gosund_sp111_5"
   upper_devicename: "Gosund SP111 5"
+  devicecomment: "Küche Wasserboiler"
   # Higher value gives lower watt readout
   current_res: "0.00280"
   # Lower value gives lower voltage readout
@@ -9,7 +10,7 @@ substitutions:
   # minimum wattage to mark consumer as active
   consumer_min_wattage: "10"
   # start on reboot
-  boot_status: "off"
+  boot_status: "on"
   boot_button: "button_switch"
 
 <<: !include common/gosund_sp111.yaml

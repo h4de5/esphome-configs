@@ -1,11 +1,21 @@
 <<: !include base.yaml
 
-sensor:
-  - !include base-sensor-wifi.yaml
-  - !include base-sensor-uptime.yaml
+esphome:
+  name: $devicename
+  comment: $devicecomment
+
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: arduino
+    version: recommended
 
 binary_sensor:
   - !include base-binarysensor-status.yaml
+
+sensor:
+  - !include base-sensor-wifi.yaml
+  - !include base-sensor-uptime.yaml
 
 # https://esphome.io/components/esp32_ble_tracker.html
 # see: https://esphome.io/components/esp32_ble_tracker.html#on-ble-advertise
@@ -19,3 +29,10 @@ esp32_ble_tracker:
 # https://github.com/esphome/bluetooth-proxies/blob/main/esp32-generic.yaml
 bluetooth_proxy:
   active: true
+
+status_led:
+  pin:
+    number: GPIO02
+    #inverted: True
+    inverted: False
+  id: led_blue

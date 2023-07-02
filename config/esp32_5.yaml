@@ -2,63 +2,9 @@ substitutions:
   # led leiste jakob
   devicename: "esp32_5"
   upper_devicename: "ESP32 5"
+  devicecomment: "Kinderzimmer Jakob - RGB LED"
+  number_leds: "104"
+  boot_brightness: "25%"
+  boot_effect: "Color change"
 
 <<: !include common/esp32-lights.yaml
-
-esphome:
-  <<: !include common/base-light-effects-lambdas.yaml
-  name: $devicename
-  platform: esp32
-  board: az-delivery-devkit-v4
-  on_boot:
-    priority: 500
-    then:
-      #- light.turn_on: ${devicename}_WS2812b_Light
-      - light.turn_on:
-          id: WS2812b
-          # effect unten beim turn on handler einstellen!
-          brightness: 25%
-
-light:
-  # ... and then make a light out of it.
-  #  - platform: monochromatic
-  #    name: "${upper_devicename} Blue LED"
-  #    output: ${devicename}_led
-
-  - platform: fastled_clockless
-    # - platform: neopixelbus
-    name: "$devicename - Licht"
-    icon: mdi:led-outline
-    chipset: WS2812b
-    # variant: WS2812X
-    # pin: D1
-    # U2 TX 34
-    pin: GPIO17
-    num_leds: 104
-    rgb_order: GRB
-    # type: GRB
-    on_turn_on:
-      - light.turn_on:
-          id: WS2812b
-          # effect: "Color change"
-          # red: 0.25
-          # green: 0.25
-          # blue: 0.25
-          # effect: "e131"
-    id: WS2812b
-    <<: !include common/base-light-effects.yaml
-
-# sensor:
-#   - !include common/base-sensor-wifi.yaml
-#   - !include common/base-sensor-uptime.yaml
-  # - platform: adc
-  #     pin: VCC
-  #     name: "${devicename} - VCC Volt"
-  #     icon: mdi:flash-outline
-
-status_led:
-  pin:
-    number: GPIO02
-    #inverted: True
-    inverted: False
-  id: led_blue

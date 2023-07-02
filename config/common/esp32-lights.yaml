@@ -1,6 +1,26 @@
 <<: !include esp32.yaml
 
-wled:
+esphome:
+  <<: !include base-light-effects-lambdas.yaml
+  name: $devicename
+  comment: $devicecomment
+  on_boot:
+    priority: 500
+    then:
+      - light.turn_on:
+          id: WS2812b
+          # effect unten beim turn on handler einstellen!
+          brightness: $boot_brightness
+
+light:
+  - !include base-light-rgb.yaml
+
+# wled:
 e131:
   # method: unicast
   method: multicast
+
+# see: https://github.com/esphome/issues/issues/4645
+external_components:
+  - source: github://esphome/esphome@2023.5.5
+    components: [e131]

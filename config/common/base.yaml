@@ -58,7 +58,6 @@ web_server:
   version: 2
   # js_include: "common/webserver-v2.min.js"
 
-
 text_sensor:
   - platform: version
     name: "${devicename} - Version"

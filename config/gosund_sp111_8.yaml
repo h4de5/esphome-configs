@@ -2,6 +2,7 @@ substitutions:
   # steckdose pelletofen
   devicename: "gosund_sp111_8"
   upper_devicename: "Gosund SP111 8"
+  devicecomment: "Wohnzimmer Pelletofen"
   # Higher value gives lower watt readout
   current_res: "0.00280"
   # Lower value gives lower voltage readout
