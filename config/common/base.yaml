@@ -8,9 +8,11 @@
 #     - lambda: |-
 #         id(my_ota).set_auth_password("New password");
 
-# Enable logging
+# disable logging
 logger:
+  # disable logs
   baud_rate: 0
+  # baud_rate: 115200
   level: INFO
 
 # Enable Home Assistant API
@@ -41,22 +43,6 @@ time:
   - platform: homeassistant
     id: homeassistant_time
     timezone: Europe/Vienna
-
-# Enable Web server
-web_server:
-  port: 80
-  local: true
-  auth:
-    username: !secret api_username
-    password: !secret api_password
-  # see: https://esphome.io/components/web_server.html
-  # css_include: "common/webserver-v1.min.css"
-  # css_url: ""
-  # js_include: "common/webserver-v1.min.js"
-  # js_url: ""
-  # see: https://esphome.io/components/web_server.html#here-be-dragons
-  version: 2
-  # js_include: "common/webserver-v2.min.js"
 
 text_sensor:
   - platform: version

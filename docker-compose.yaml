@@ -4,7 +4,9 @@ services:
   esphome:
     #image: esphome/esphome:beta
     #image: esphome/esphome:dev
-    image: esphome/esphome:latest
+    # image: esphome/esphome:latest
+    image: ghcr.io/esphome/esphome:stable
+    # image: esphome/esphome:2023.5.5
     devices:
       #  - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/bus/usb:/dev/bus/usb"
