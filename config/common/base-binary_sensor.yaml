@@ -1,0 +1,6 @@
+binary_sensor:
+  # - !include ext-binary_sensor-status.yaml
+  - platform: status
+    name: "${devicename} - Status"
+    # icon: mdi:lan-connect
+    device_class: connectivity

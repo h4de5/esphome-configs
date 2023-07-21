@@ -1,25 +1,22 @@
 <<: !include base.yaml
 
-packages:
-  web_server: !include base-web_server.yaml
-  bluetooth: !include base-ble.yaml
+# see https://esphome.io/guides/configuration-types.html
 
-esphome:
-  name: $devicename
-  comment: $devicecomment
+packages:
+  # web_server: !include base-web_server.yaml
+  esphome: !include base-esphome.yaml
+  wifi: !include base-wifi.yaml
+  ota: !include base-ota.yaml
+  sensor: !include base-sensor.yaml
+  binary_sensor: !include base-binary_sensor.yaml
+  text_sensor: !include base-text_sensor.yaml
+  bluetooth: !include base-ble.yaml
 
 esp32:
   board: az-delivery-devkit-v4
   framework:
     type: arduino
     version: recommended
-
-binary_sensor:
-  - !include base-binarysensor-status.yaml
-
-sensor:
-  - !include base-sensor-wifi.yaml
-  - !include base-sensor-uptime.yaml
 
 status_led:
   pin:

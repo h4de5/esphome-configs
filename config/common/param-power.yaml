@@ -1,0 +1,24 @@
+current:
+  name: "${devicename} - Ampere"
+  unit_of_measurement: A
+  accuracy_decimals: 3
+  icon: mdi:current-ac
+
+voltage:
+  name: "${devicename} - Volt"
+  unit_of_measurement: V
+  accuracy_decimals: 1
+  icon: mdi:flash-outline
+
+power:
+  name: "${devicename} - Watt"
+  unit_of_measurement: W
+  id: "power_wattage"
+  icon: mdi:gauge
+  # on_value_range:
+  #   - above: 4.0
+  #     then:
+  #       - light.turn_on: led_blue
+  #   - below: 3.0
+  #     then:
+  #       - light.turn_off: led_blue

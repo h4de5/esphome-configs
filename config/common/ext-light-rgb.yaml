@@ -21,4 +21,4 @@ on_turn_on:
       # brightness: $boot_brightness
       effect: $boot_effect
 id: WS2812b
-<<: !include base-light-effects.yaml
+<<: !include param-light-effects.yaml

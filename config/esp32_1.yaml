@@ -11,9 +11,14 @@ substitutions:
 # <<: !include common/esp32-lights.yaml
 <<: !include common/esp32.yaml
 
-# remove some default packages
 packages:
-  web_server: !include common/empty.yaml
+  # web_server: !include base-web_server.yaml
+  esphome: !include common/base-esphome.yaml
+  wifi: !include common/base-wifi.yaml
+  ota: !include common/base-ota.yaml
+  sensor: !include common/base-sensor.yaml
+  binary_sensor: !include common/base-binary_sensor.yaml
+  text_sensor: !include common/base-text_sensor.yaml
   bluetooth: !include common/empty.yaml
 
 # esphome:
@@ -41,8 +46,6 @@ logger:
   level: DEBUG
 
 # sensor:
-#   - !include common/base-sensor-wifi.yaml
-#   - !include common/base-sensor-uptime.yaml
 #   - !include common/ext-sensor-dht.yaml
 mdns:
   disabled: true

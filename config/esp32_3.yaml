@@ -17,8 +17,6 @@ globals:
 <<: !include common/esp32-lights.yaml
 
 sensor:
-  - !include common/base-sensor-wifi.yaml
-  - !include common/base-sensor-uptime.yaml
   - platform: adc
     # pin: A0
     # use an ADC1 pin
@@ -57,7 +55,6 @@ sensor:
             #        return (int)x;
 
 binary_sensor:
-  - !include common/base-binarysensor-status.yaml
   # light on/off button
   - platform: gpio
     device_class: light
@@ -117,31 +114,3 @@ binary_sensor:
 
           id(current_effect) += 1;
           call.perform();
-
-# light:
-#   - platform: fastled_clockless
-#     name: "$devicename - Licht"
-#     icon: mdi:led-outline
-#     chipset: WS2811
-#     # pin: D1
-#     # use an U2 TX pin
-#     pin: GPIO17
-#     # half of the leds burned out
-#     num_leds: 64
-#     # rgb_order: BRG
-#     # rgb_order: GRB
-#     rgb_order: RGB
-#     # disable on_turn on handler because brightness adc will call it often
-#     # on_turn_on:
-#     #  - light.turn_on:
-#     #      id: WS2812b
-#     # effect: "Random Twinkle 20%"
-#     #      effect: None
-#     # effect: "starry sky"
-#     # effect: "candles"
-#     # red: 1
-#     # green: 0.75
-#     # blue: 0.2
-#     # effect: "color change"
-#     id: WS2812b
-#     <<: !include common/base-light-effects.yaml

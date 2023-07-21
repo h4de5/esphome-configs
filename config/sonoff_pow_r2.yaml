@@ -9,13 +9,15 @@ substitutions:
 esphome:
   name: $devicename
   comment: $devicecomment
-  platform: ESP8266
-  board: esp01_1m
-  board_flash_mode: dout
   on_boot:
     priority: -10
     then:
       - switch.turn_on: button_switch
+
+esp8266:
+  board: esp01_1m
+  board_flash_mode: dout
+  restore_from_flash: true
 
 <<: !include common/base.yaml
 
@@ -24,8 +26,7 @@ uart:
   baud_rate: 4800
 
 binary_sensor:
-  - !include common/base-binarysensor-status.yaml
-  - !include common/base-binarysensor-consumer.yaml
+  - !include common/ext-binary_sensor-consumer.yaml
   - platform: gpio
     pin:
       number: GPIO0
@@ -36,37 +37,11 @@ binary_sensor:
       - switch.toggle: button_switch
 
 sensor:
-  - !include common/base-sensor-wifi.yaml
-  - !include common/base-sensor-uptime.yaml
-  - !include common/base-sensor-wattage.yaml
-  - !include common/base-sensor-vcc.yaml
+  - !include common/ext-sensor-wattage.yaml
+  - !include common/ext-sensor-vcc.yaml
   - platform: cse7766
     update_interval: 3s
-
-    current:
-      name: "${devicename} - Ampere"
-      unit_of_measurement: A
-      accuracy_decimals: 3
-      icon: mdi:current-ac
-
-    voltage:
-      name: "${devicename} - Volt"
-      unit_of_measurement: V
-      accuracy_decimals: 1
-      icon: mdi:flash-outline
-
-    power:
-      name: "${devicename} - Watt"
-      unit_of_measurement: W
-      id: "power_wattage"
-      icon: mdi:gauge
-      # on_value_range:
-      #   - above: 4.0
-      #     then:
-      #       - light.turn_on: led_blue
-      #   - below: 3.0
-      #     then:
-      #       - light.turn_off: led_blue
+    <<: !include common/param-power.yaml
 
 switch:
   - platform: template
@@ -92,4 +67,4 @@ output:
     inverted: True
 
 light:
-  - !include common/base-light-blue.yaml
+  - !include common/ext-light-blue.yaml

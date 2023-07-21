@@ -1,7 +1,7 @@
 <<: !include esp32.yaml
 
 esphome:
-  <<: !include base-light-effects-lambdas.yaml
+  <<: !include param-light-effects-lambdas.yaml
   name: $devicename
   comment: $devicecomment
   on_boot:
@@ -13,7 +13,7 @@ esphome:
           brightness: $boot_brightness
 
 light:
-  - !include base-light-rgb.yaml
+  - !include ext-light-rgb.yaml
 
 # wled:
 e131:

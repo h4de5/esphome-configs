@@ -8,6 +8,4 @@ substitutions:
 <<: !include common/esp32.yaml
 
 sensor:
-  - !include common/base-sensor-wifi.yaml
-  - !include common/base-sensor-uptime.yaml
   - !include common/ext-sensor-dht.yaml

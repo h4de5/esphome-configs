@@ -10,7 +10,6 @@ esphome:
 <<: !include common/base.yaml
 
 binary_sensor:
-  - !include common/base-binarysensor-status.yaml
   - platform: gpio
     pin:
       number: GPIO0
@@ -58,6 +57,4 @@ output:
     inverted: True
 
 sensor:
-  - !include common/base-sensor-wifi.yaml
-  - !include common/base-sensor-uptime.yaml
-  - !include common/base-sensor-vcc.yaml
+  - !include common/ext-sensor-vcc.yaml

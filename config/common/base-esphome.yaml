@@ -1,0 +1,3 @@
+esphome:
+  name: $devicename
+  comment: $devicecomment

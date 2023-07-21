@@ -1,0 +1,23 @@
+# see: https://esphome.io/components/ota.html
+# for ota password change
+# needs to be put in gosund_sp111 or sonoff*.yaml
+# esphome:
+#   on_boot:
+#     - lambda: |-
+#         id(my_ota).set_auth_password("New password");
+
+# Enable over the air updates
+ota:
+  safe_mode: true
+  password: !secret api_password
+  on_begin:
+    then:
+      - logger.log: "OTA start"
+  on_end:
+    then:
+      - logger.log: "OTA end"
+  on_error:
+    then:
+      - logger.log:
+          format: "OTA update error %d"
+          args: ["x"]
