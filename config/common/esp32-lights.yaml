@@ -24,3 +24,4 @@ e131:
 external_components:
   - source: github://esphome/esphome@2023.5.5
     components: [e131]
+    refresh: never
