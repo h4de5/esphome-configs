@@ -19,100 +19,104 @@ packages:
   sensor: !include common/base-sensor.yaml
   binary_sensor: !include common/base-binary_sensor.yaml
   text_sensor: !include common/base-text_sensor.yaml
-  bluetooth: !include common/empty.yaml
+  # bluetooth: !include common/empty.yaml
 
-# esphome:
-#   includes:
-#     - lambdas/my_play_media_data.h
-#   name: $devicename
-#   comment: $devicecomment
+sensor:
+  - !include common/ext-sensor-dht.yaml
 
-# status_led in esp32 should be removed then
-light:
-  - platform: status_led
-    name: "$devicename - Status Led"
-    pin: GPIO2
-    on_turn_on:
-      - logger.log: "Status Light Turned On!"
-      - media_player.volume_set: 100%
-      # Static raw audio data
-      # - speaker.play: !lambda return my_play_media_data;
-      # - media_player.play_media: 'http://192.168.0.10:50002/m/NDLNA/472607.wav'
-      - media_player.play_media: "http://192.168.0.10:50002/m/NDLNA/449121.mp3"
+# # esphome:
+# #   includes:
+# #     - lambdas/my_play_media_data.h
+# #   name: $devicename
+# #   comment: $devicecomment
 
-# Enable logging
-logger:
-  baud_rate: 115200
-  level: DEBUG
+# # status_led in esp32 should be removed then
+# light:
+#   - platform: status_led
+#     name: "$devicename - Status Led"
+#     pin: GPIO2
+#     on_turn_on:
+#       - logger.log: "Status Light Turned On!"
+#       - media_player.volume_set: 100%
+#       # Static raw audio data
+#       # - speaker.play: !lambda return my_play_media_data;
+#       # - media_player.play_media: 'http://192.168.0.10:50002/m/NDLNA/472607.wav'
+#       - media_player.play_media: "http://192.168.0.10:50002/m/NDLNA/449121.mp3"
 
-# sensor:
-#   - !include common/ext-sensor-dht.yaml
-mdns:
-  disabled: true
+# # Enable logging
+# logger:
+#   baud_rate: 115200
+#   level: DEBUG
 
-media_player:
-  - platform: i2s_audio
-    name: "$devicename - Media Player"
-    # id: "$devicename_media_player"
-    dac_type: external
-    # => DIN
-    i2s_dout_pin: GPIO22
-    # => wsel
-    i2s_lrclk_pin: GPIO33
-    # => bclk
-    i2s_bclk_pin: GPIO19
-    # should be a pin schema
-    mute_pin:
-      number: GPIO25
-      inverted: true
-    mode: stereo
-    # mode: mono
-    # i2s_audio_id: my_i2s_audio
-    # see: https://esphome.io/components/media_player/i2s_audio.html#external-dac
-    # only after 2023.06
-    # i2s_comm_fmt: lsb
-    # i2s_comm_fmt: msb
 
-    on_play:
-      then:
-        # - light.turn_on: board_light
-        - logger.log: "Playback started"
-    on_idle:
-      then:
-        # - light.turn_off: board_light
-        - logger.log: "Idle"
-    on_pause:
-      then:
-        # - light.turn_off: board_light
-        - logger.log: "Paused"
-# i2s_audio:
-#   # => wsel
-#   i2s_lrclk_pin: GPIO33
-#   # => bclk
-#   i2s_bclk_pin: GPIO19
-#   # not required by DAC
-#   # i2s_mclk_pin: xx
-#   id: my_i2s_audio
-# speaker:
+# mdns:
+#   disabled: true
+
+# media_player:
 #   - platform: i2s_audio
+#     name: "$devicename - Media Player"
+#     # id: "$devicename_media_player"
 #     dac_type: external
+#     # => DIN
 #     i2s_dout_pin: GPIO22
+#     # => wsel
+#     i2s_lrclk_pin: GPIO33
+#     # => bclk
+#     i2s_bclk_pin: GPIO19
+#     # should be a pin schema
+#     mute_pin:
+#       number: GPIO25
+#       inverted: true
 #     mode: stereo
-#     id: my_speaker
-#### not in use
+#     # mode: mono
+#     # i2s_audio_id: my_i2s_audio
+#     # see: https://esphome.io/components/media_player/i2s_audio.html#external-dac
+#     # only after 2023.06
+#     # i2s_comm_fmt: lsb
+#     # i2s_comm_fmt: msb
 
-# switch:
-#   - platform: mqtt
-#     name: play song
-#     state_topic: "player/state"
-#     command_topic: "player/play"
-#     payload_on: "http://192.168.0.10:50002/m/NDLNA/472607.wav"
-#     payload_off: "http://192.168.0.10:50002/m/NDLNA/472609.wav"
+#     on_play:
+#       then:
+#         # - light.turn_on: board_light
+#         - logger.log: "Playback started"
+#     on_idle:
+#       then:
+#         # - light.turn_off: board_light
+#         - logger.log: "Idle"
+#     on_pause:
+#       then:
+#         # - light.turn_off: board_light
+#         - logger.log: "Paused"
 
-# see: https://github.com/esphome/issues/issues/4645
-external_components:
-  - source: github://esphome/esphome@2023.3.2
-    components: [i2s_audio, media_player]
-#   # - platform: ble_rssi
-#   #   mac_address: !secret fitness_tracker
-#   #   name: "${devicename} Tracker Signal"
+# #### not in use
+# # i2s_audio:
+# #   # => wsel
+# #   i2s_lrclk_pin: GPIO33
+# #   # => bclk
+# #   i2s_bclk_pin: GPIO19
+# #   # not required by DAC
+# #   # i2s_mclk_pin: xx
+# #   id: my_i2s_audio
+# # speaker:
+# #   - platform: i2s_audio
+# #     dac_type: external
+# #     i2s_dout_pin: GPIO22
+# #     mode: stereo
+# #     id: my_speaker
+# #### not in use
+
+# # switch:
+# #   - platform: mqtt
+# #     name: play song
+# #     state_topic: "player/state"
+# #     command_topic: "player/play"
+# #     payload_on: "http://192.168.0.10:50002/m/NDLNA/472607.wav"
+# #     payload_off: "http://192.168.0.10:50002/m/NDLNA/472609.wav"
+
+# # see: https://github.com/esphome/issues/issues/4645
+# external_components:
+#   - source: github://esphome/esphome@2023.3.2
+#     components: [i2s_audio, media_player]
+# #   # - platform: ble_rssi
+# #   #   mac_address: !secret fitness_tracker
+# #   #   name: "${devicename} Tracker Signal"

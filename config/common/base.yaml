@@ -25,7 +25,20 @@ api:
   # password: !secret api_password
 
 # see: https://esphome.io/components/time.html
+# time:
+#   - platform: homeassistant
+#     id: homeassistant_time
+#     timezone: Europe/Vienna
+
+# see: https://esphome.io/components/time/sntp.html
 time:
-  - platform: homeassistant
-    id: homeassistant_time
-    timezone: Europe/Vienna
+  - platform: sntp
+    timezone: "Europe/Vienna"
+    servers:
+      - 192.168.0.1
+
+# see: https://esphome.io/components/button/restart.html
+button:
+  - platform: restart
+    # id: "${devicename}_restart"
+    name: "${devicename} - Restart"

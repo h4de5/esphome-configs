@@ -29,6 +29,7 @@ binary_sensor:
       inverted: True
     on_press:
       - switch.toggle: "relay_1"
+
     name: "${devicename} - Button 1"
   - platform: gpio
     pin:
@@ -37,6 +38,7 @@ binary_sensor:
       inverted: True
     on_press:
       - switch.toggle: "relay_2"
+
     name: "${devicename} - Button 2"
   - platform: gpio
     pin:
@@ -45,6 +47,7 @@ binary_sensor:
       inverted: True
     on_press:
       - switch.toggle: "relay_3"
+
     name: "${devicename} - Button 3"
   - platform: gpio
     pin:
@@ -53,6 +56,7 @@ binary_sensor:
       inverted: True
     on_press:
       - switch.toggle: "relay_4"
+
     name: "${devicename} - Button 4"
 
 switch:
@@ -60,18 +64,30 @@ switch:
     name: "${devicename} - Relay 1"
     pin: GPIO12
     id: "relay_1"
+    on_turn_on:
+      - delay: 45min
+      - switch.turn_off: "relay_1"
   - platform: gpio
     name: "${devicename} - Relay 2"
     pin: GPIO5
     id: "relay_2"
+    on_turn_on:
+      - delay: 45min
+      - switch.turn_off: "relay_2"
   - platform: gpio
     name: "${devicename} - Relay 3"
     pin: GPIO4
     id: "relay_3"
+    on_turn_on:
+      - delay: 45min
+      - switch.turn_off: "relay_3"
   - platform: gpio
     name: "${devicename} - Relay 4"
     pin: GPIO15
     id: "relay_4"
+    on_turn_on:
+      - delay: 5min
+      - switch.turn_off: "relay_4"
 
 # output:
 #   # Register the blue LED as a dimmable output ....

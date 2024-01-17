@@ -16,11 +16,20 @@ light:
   - !include ext-light-rgb.yaml
 
 # wled:
-e131:
-  # method: unicast
-  method: multicast
+# e131:
+#  method: unicast
+  # method: multicast
 
 # see: https://github.com/esphome/issues/issues/4645
-external_components:
-  - source: github://esphome/esphome@2023.5.5
-    components: [e131]
+# external_components:
+   # - source: github://esphome/esphome@2023.5.5
+   #  components: [e131]
+   #  refresh: never
+
+# external_components:
+#  - source:
+#      type: git
+#      url: https://github.com/esphome/esphome
+#      ref: 2023.5.5
+#    components: e131
+#    refresh: never

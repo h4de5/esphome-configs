@@ -1,24 +1,22 @@
-platform: fastled_clockless
-# - platform: neopixelbus
+# platform: fastled_clockless
+# platform: neopixelbus
+platform: esp32_rmt_led_strip
 name: "$devicename - Licht"
 icon: mdi:led-outline
-chipset: WS2812b
+# chipset: WS2812b
+chipset: WS2812
+rmt_channel: 0
 # variant: WS2812X
 # pin: D1
 # U2 TX 34
 pin: GPIO17
 num_leds: $number_leds
 rgb_order: GRB
+# restore_mode: RESTORE_DEFAULT_OFF
 # type: GRB
 on_turn_on:
   - light.turn_on:
       id: WS2812b
-      # effect: "Color change"
-      # red: 0.25
-      # green: 0.25
-      # blue: 0.25
-      # effect: "e131"
-      # brightness: $boot_brightness
       effect: $boot_effect
 id: WS2812b
 <<: !include param-light-effects.yaml

@@ -73,7 +73,8 @@ effects:
   # - wled:
   #     name: "wled"
   #     port: 19446
-  - e131:
+  # - e131:
       # set with e131 on boot or by E1.31 in automations
-      universe: 1
-      channels: RGB
+  #    name: e131
+  #    universe: 1
+  #    channels: RGB
