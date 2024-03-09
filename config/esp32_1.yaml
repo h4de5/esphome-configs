@@ -8,6 +8,18 @@ substitutions:
   boot_effect: "none"
   dht_gpio: "GPIO33"
 
+  # on_boot:
+  #    - priority: -100
+  #      then:
+  #        - wait_until: api.connected
+  #        - delay: 1s
+  #        - if:
+  #            condition:
+  #              switch.is_on: use_wake_word
+  #            then:
+  #              - voice_assistant.start_continuous:
+
+
 # <<: !include common/esp32-lights.yaml
 <<: !include common/esp32.yaml
 
@@ -52,6 +64,71 @@ sensor:
 # mdns:
 #   disabled: true
 
+# device: uda1334a or CJMCU-1334
+# see: https://github.com/adafruit/Adafruit-UDA1334A-I2S-Stereo-DAC-PCB
+
+# see: https://gist.github.com/EverythingSmartHome/055fbdde31a607ef9d695d5cac780e94?permalink_comment_id=4747736
+# see: https://medium.com/@the_smart_home_maker/use-esphome-and-home-assistant-to-replace-alexa-with-local-voice-assistant-part-i-prototype-1ff9f55602c0
+# full setup: https://smarthomecircle.com/created-voice-assistant-esp32-with-wake-word-in-home-assistant
+
+# i2s_audio:
+#   i2s_lrclk_pin: GPIO27
+#   i2s_bclk_pin: GPIO26
+
+# microphone:
+#   - platform: i2s_audio
+#     id: mic
+#     adc_type: external
+#     i2s_din_pin: GPIO13
+#     pdm: false
+
+# speaker:
+#   - platform: i2s_audio
+#     id: big_speaker
+#     dac_type: external
+#     i2s_dout_pin: GPIO25
+#     mode: mono
+
+# voice_assistant:
+#   microphone: mic
+#   use_wake_word: false
+#   noise_suppression_level: 2
+#   auto_gain: 31dBFS
+#   volume_multiplier: 2.0
+#   speaker: big_speaker
+#   id: assist
+
+
+# switch:
+#   - platform: template
+#     name: Use wake word
+#     id: use_wake_word
+#     optimistic: true
+#     restore_mode: RESTORE_DEFAULT_ON
+#     entity_category: config
+#     on_turn_on:
+#       - lambda: id(assist).set_use_wake_word(true);
+#       - if:
+#           condition:
+#             not:
+#               - voice_assistant.is_running
+#           then:
+#             - voice_assistant.start_continuous
+#     on_turn_off:
+#       - voice_assistant.stop
+#       - lambda: id(assist).set_use_wake_word(false);
+
+# # see: https://esphome.io/components/i2s_audio
+# i2s_audio:
+#   # => wsel
+#   i2s_lrclk_pin: GPIO33
+#   # => bclk
+#   i2s_bclk_pin: GPIO19
+#   # not required by DAC
+#   # i2s_mclk_pin: xx
+#   id: my_i2s_audio
+
+# # see: https://esphome.io/components/media_player/i2s_audio
 # media_player:
 #   - platform: i2s_audio
 #     name: "$devicename - Media Player"
@@ -59,10 +136,10 @@ sensor:
 #     dac_type: external
 #     # => DIN
 #     i2s_dout_pin: GPIO22
-#     # => wsel
-#     i2s_lrclk_pin: GPIO33
-#     # => bclk
-#     i2s_bclk_pin: GPIO19
+#     # # => wsel
+#     # i2s_lrclk_pin: GPIO33
+#     # # => bclk
+#     # i2s_bclk_pin: GPIO19
 #     # should be a pin schema
 #     mute_pin:
 #       number: GPIO25
@@ -74,7 +151,6 @@ sensor:
 #     # only after 2023.06
 #     # i2s_comm_fmt: lsb
 #     # i2s_comm_fmt: msb
-
 #     on_play:
 #       then:
 #         # - light.turn_on: board_light
@@ -88,21 +164,29 @@ sensor:
 #         # - light.turn_off: board_light
 #         - logger.log: "Paused"
 
+# speaker:
+#   - platform: i2s_audio
+#     dac_type: external
+#     i2s_dout_pin: GPIO22
+#     mode: stereo
+#     id: my_speaker
+
+
 # #### not in use
-# # i2s_audio:
-# #   # => wsel
-# #   i2s_lrclk_pin: GPIO33
-# #   # => bclk
-# #   i2s_bclk_pin: GPIO19
-# #   # not required by DAC
-# #   # i2s_mclk_pin: xx
-# #   id: my_i2s_audio
-# # speaker:
-# #   - platform: i2s_audio
-# #     dac_type: external
-# #     i2s_dout_pin: GPIO22
-# #     mode: stereo
-# #     id: my_speaker
+# i2s_audio:
+#   # => wsel
+#   i2s_lrclk_pin: GPIO33
+#   # => bclk
+#   i2s_bclk_pin: GPIO19
+#   # not required by DAC
+#   # i2s_mclk_pin: xx
+#   id: my_i2s_audio
+# speaker:
+#   - platform: i2s_audio
+#     dac_type: external
+#     i2s_dout_pin: GPIO22
+#     mode: stereo
+#     id: my_speaker
 # #### not in use
 
 # # switch:

@@ -1,0 +1,92 @@
+substitutions:
+  # ESP panlab
+  devicename: "esp32-panlab"
+  upper_devicename: "ESP32 Panlab"
+  devicecomment: "ESP32 Playground"
+
+<<: !include common/esp32.yaml
+
+packages:
+  # web_server: !include base-web_server.yaml
+  esphome: !include common/base-esphome.yaml
+  wifi: !include common/empty.yaml
+  ota: !include common/empty.yaml
+  sensor: !include common/base-sensor.yaml
+  binary_sensor: !include common/base-binary_sensor.yaml
+  text_sensor: !include common/base-text_sensor.yaml
+  bluetooth: !include common/empty.yaml
+
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+  #   type: arduino
+    type: esp-idf
+    version: recommended
+
+wifi:
+  ssid: Pannonian Laboratories
+  password: Eisenstadt123
+  # fast_connect:
+  #   on
+  # power_save_mode: LIGHT
+  domain: .fritz.box
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${devicename} Hotspot"
+    password: "Eisenstadt123"
+
+api:
+  # adds 2 additional components - ask to reconfigure in HA
+  encryption:
+    key: WlBiKUMHwkRYj6NVHQ7bKJEQ5rjV5mKRFsQ/eHgz/1w=
+
+# Enable Web server
+web_server:
+  port: 80
+  local: true
+  auth:
+    username: panlab
+    password: Eisenstadt123
+  version: 2
+
+ota:
+  safe_mode: true
+  password: Eisenstadt123
+
+time:
+- platform: sntp
+  timezone: "Europe/Vienna"
+  servers:
+    - 0.at.pool.ntp.org
+    - 1.at.pool.ntp.org
+    - 2.at.pool.ntp.org
+
+
+# der scheiss geht ned!
+# switch:
+#   - platform: template
+#     name: "${devicename} - Switch"
+#     id: your_switch_entity
+#     turn_on_action:
+#       - logger.log: Button Pressed
+#     turn_off_action:
+#       - logger.log: Button Released
+
+# binary_sensor:
+#   # - !include ext-binary_sensor-status.yaml
+#   - platform: status
+#     name: "${devicename} - Status"
+#     # icon: mdi:lan-connect
+#     device_class: connectivity
+
+#   - platform: gpio
+#     pin: GPIO15
+#     name: "${devicename} - Button"
+#     id: button_sensor
+#     on_press:
+#       then:
+#         switch.turn_on: your_switch_entity
+#     on_release:
+#       then:
+#         switch.turn_off: your_switch_entity
+

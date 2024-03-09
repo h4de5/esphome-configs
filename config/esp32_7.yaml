@@ -1,0 +1,7 @@
+substitutions:
+  # ESP
+  devicename: "esp32_7"
+  upper_devicename: "ESP32 7"
+  devicecomment: "ESP32 7"
+
+<<: !include common/esp32.yaml

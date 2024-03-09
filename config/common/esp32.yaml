@@ -3,7 +3,7 @@
 # see https://esphome.io/guides/configuration-types.html
 
 packages:
-  # web_server: !include base-web_server.yaml
+  web_server: !include base-web_server.yaml
   esphome: !include base-esphome.yaml
   wifi: !include base-wifi.yaml
   ota: !include base-ota.yaml
@@ -16,6 +16,7 @@ esp32:
   board: az-delivery-devkit-v4
   framework:
     type: arduino
+    # type: esp-idf
     version: recommended
 
 status_led:

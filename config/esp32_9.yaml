@@ -1,0 +1,278 @@
+substitutions:
+  # ESP
+  devicename: "esp32_9"
+  upper_devicename: "ESP32 9"
+  devicecomment: "ESP32 9"
+
+<<: !include common/esp32.yaml
+
+packages:
+  web_server: !include common/base-web_server.yaml
+  esphome: !include common/base-esphome.yaml
+  wifi: !include common/base-wifi.yaml
+  ota: !include common/base-ota.yaml
+  sensor: !include common/base-sensor.yaml
+  binary_sensor: !include common/base-binary_sensor.yaml
+  text_sensor: !include common/empty.yaml
+  bluetooth: !include common/empty.yaml
+
+
+# # status_led in esp32 should be removed then
+# light:
+#   - platform: status_led
+#     name: "$devicename - Status Led"
+#     pin: GPIO2
+#     on_turn_on:
+#       - logger.log: "Status Light Turned On!"
+#       - media_player.volume_set: 100%
+#       # Static raw audio data
+#       # - speaker.play: !lambda return my_play_media_data;
+#       # - media_player.play_media: 'http://192.168.0.10:50002/m/NDLNA/472607.wav'
+#       - media_player.play_media: "http://192.168.0.10:50002/m/NDLNA/449121.mp3"
+
+# Enable logging
+logger:
+  baud_rate: 115200
+  level: DEBUG
+
+# https://community.home-assistant.io/t/esphome-ir-receiver/247341/9
+# 11:46:16][I][remote.jvc:049]: Received JVC: data=0x00F7
+# [11:46:16][I][remote.lg:054]: Received LG: data=0x00F700FF, nbits=32
+# [11:46:16][I][remote.nec:098]: Received NEC: address=0xEF00, command=0xFF00 command_repeats=1
+
+remote_receiver:
+  pin:
+    number: GPIO33
+    inverted: True
+    mode: INPUT_PULLUP
+  dump: all
+  # on_jvc: 
+  #   then:
+  #     - homeassistant.event:
+  #         event: esphome.ir_command
+  #         data_template: 
+  #           value: !lambda "return x.data;"
+  on_nec:
+    then:
+      - homeassistant.event:
+          event: esphome.ir_command
+          data_template: 
+            value: !lambda "return x.command;"
+  # on_lg:
+  #   then:
+  #     - homeassistant.event:
+  #         event: esphome.ir_command
+  #         data_template: 
+  #           value: !lambda "return x.data;"
+          # data_template:
+          #   data: '{{ ir_command }}'
+          #   # sender: "$devicename"
+          # variables:
+          #   ir_command: !lambda |-
+          #     int data = x.data;
+          #     char hex[8];
+          #     sprintf(hex, "%#.08X", data);
+          #     return hex;
+
+
+#mdns:
+#  disabled: true
+
+# device: uda1334a or CJMCU-1334
+# see: https://github.com/adafruit/Adafruit-UDA1334A-I2S-Stereo-DAC-PCB
+
+# see: https://gist.github.com/EverythingSmartHome/055fbdde31a607ef9d695d5cac780e94?permalink_comment_id=4747736
+# full setup: https://smarthomecircle.com/created-voice-assistant-esp32-with-wake-word-in-home-assistant
+# see: https://medium.com/@the_smart_home_maker/use-esphome-and-home-assistant-to-replace-alexa-with-local-voice-assistant-part-i-prototype-1ff9f55602c0
+
+
+
+# # see: https://esphome.io/components/i2s_audio
+i2s_audio:
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO27
+    i2s_bclk_pin: GPIO26
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO25
+    i2s_bclk_pin: GPIO14
+
+microphone:
+  - platform: i2s_audio
+    i2s_audio_id: i2s_in
+    adc_type: external
+    pdm: false
+    id: mic_i2s
+    i2s_din_pin: GPIO13
+    bits_per_sample: 32bit
+
+# not needed when using media_player
+# speaker:
+#   - platform: i2s_audio
+#     i2s_audio_id: i2s_out
+#     id: speaker_i2s
+#     dac_type: external
+#     i2s_dout_pin: GPIO32
+#     # mode: mono
+#     mode: stereo
+
+
+# # see: https://esphome.io/components/media_player/i2s_audio
+media_player:
+  - platform: i2s_audio
+    name: "$devicename - Media Player"
+    id: player_i2s
+    dac_type: external
+    # => DIN
+    # i2s_dout_pin: GPIO22
+    i2s_dout_pin: GPIO32
+    mode: mono
+    i2s_audio_id: i2s_out
+
+    # see: https://esphome.io/components/media_player/i2s_audio.html#external-dac
+    # only after 2023.06
+    # i2s_comm_fmt: lsb
+    # i2s_comm_fmt: msb
+    on_play:
+      then:
+        - logger.log: "Playback started"
+    on_idle:
+      then:
+        - logger.log: "Playback Idle"
+    on_pause:
+      then:
+        - logger.log: "Playback Paused"
+
+# only available for type: esp-idf
+# micro_wake_word:
+#   model: alexa
+#   on_wake_word_detected:
+#     then:
+#       - voice_assistant.start:
+#           wake_word: !lambda return wake_word
+
+
+voice_assistant:
+  microphone: mic_i2s
+  # speaker: speaker_i2s
+  media_player: player_i2s
+  use_wake_word: false
+  noise_suppression_level: 3
+  auto_gain: 31dBFS
+  volume_multiplier: 2.0
+  # vad_threshold: 3
+  id: assist
+  on_client_disconnected:
+    then:
+      - voice_assistant.stop:
+  # see https://community.home-assistant.io/t/play-sound-when-wakeword-detected/653928/13
+  on_listening: 
+    then:
+      - logger.log: "VoiceAssistant starts listening"
+  on_wake_word_detected:
+    then:
+      - logger.log: "VoiceAssistant detected wake word"
+      - text_sensor.template.publish:
+          id: display_text
+          state: "Jaa?"
+  on_start: 
+    then:
+      - logger.log: "VoiceAssistant started pipeline"
+  on_intent_start:
+    then:
+      - logger.log: "VoiceAssistant starting intent"
+      - text_sensor.template.publish:
+          id: display_text
+          state: "^__^"
+    # - switch.turn_off: use_wake_word
+    # - delay: !lambda "if (id(use_wake_word).state) return 200; else return 0;"
+    # - media_player.play_media:
+    #     id: player_i2s
+    #     media_url: 'http://192.168.0.6:32469/object/82cf9f04be322ddf6146/file.mp3'
+    # # - homeassistant.service:
+    # #     service: tts.speak
+    # #     data:
+    # #       # cache: "false"
+    # #       media_player_entity_id: media_player.esp32_9_media_player
+    # #       message: ja? was gibts?
+    # #       entity_id: tts.piper
+    # - wait_until:
+    #     not:
+    #       media_player.is_playing: player_i2s
+    # - delay: 10ms
+    # - switch.turn_on: use_wake_word
+    # # - voice_assistant.start_continuous
+
+  on_stt_end: 
+    then:
+      - logger.log: "VoiceAssistant finished Speech2Text"
+  on_intent_end: 
+    then:
+      - logger.log: "VoiceAssistant ending intent"
+      - text_sensor.template.publish:
+          id: display_text
+          state: ""
+  on_error:
+    then:
+      - logger.log: "VoiceAssistant encountered error"
+      - text_sensor.template.publish:
+          id: display_text
+          state: " o.O "
+  on_end: 
+    then:
+      - logger.log: "VoiceAssistant ending"
+      - text_sensor.template.publish:
+          id: display_text
+          state: ""
+  
+
+switch:
+  - platform: template
+    name: "$devicename - Use wake word"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    on_turn_on:
+      - lambda: id(assist).set_use_wake_word(true);
+      - if:
+          condition:
+            not:
+              - voice_assistant.is_running
+          then:
+            - voice_assistant.start_continuous
+    on_turn_off:
+      - voice_assistant.stop
+      - lambda: id(assist).set_use_wake_word(false);
+
+
+# see available characters: https://esphome.io/components/display/max7219#display-max7219-characters
+text_sensor:
+  - !include common/ext-text_sensor-wifi.yaml
+  - !include common/ext-text_sensor-version.yaml
+  - platform: template
+    name: "$devicename - Display Text"
+    id: display_text
+    lambda: |-
+      return {""};
+    update_interval: 30s
+
+# 7-segment display
+# see: https://esphome.io/components/display/tm1637.html
+display:
+  platform: tm1637
+  # name: "$devicename - Display"
+  id: clock_display
+  clk_pin: GPIO5
+  dio_pin: GPIO17
+  intensity: 0
+  update_interval: 500ms
+  lambda: |-
+      static int i = 0;
+      i++;
+      if (id(display_text).state != "") {
+        it.printf("%s", id(display_text).state);
+      } else {
+        if ((i % 2) == 0)
+          it.strftime("%H.%M", id(sync_time).now());
+        else
+          it.strftime("%H%M", id(sync_time).now());
+      }

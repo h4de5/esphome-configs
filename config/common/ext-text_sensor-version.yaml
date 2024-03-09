@@ -1,0 +1,3 @@
+platform: version
+name: "${devicename} - Version"
+icon: mdi:cube-outline

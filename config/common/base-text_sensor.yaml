@@ -1,15 +1,3 @@
 text_sensor:
-  - platform: version
-    name: "${devicename} - Version"
-    icon: mdi:cube-outline
-  - platform: wifi_info
-    ip_address:
-      name: "${devicename} - IP"
-      icon: mdi:ip-network-outline
-    # ssid:
-    #   name: ESP Connected SSID
-    # bssid:
-    #   name: ESP Connected BSSID
-    mac_address:
-      name: "${devicename} - Mac"
-      icon: mdi:network-outline
+  - !include ext-text_sensor-wifi.yaml
+  - !include ext-text_sensor-version.yaml

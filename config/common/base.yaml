@@ -1,5 +1,5 @@
 packages:
-  # web_server: !include base-web_server.yaml
+  web_server: !include base-web_server.yaml
   esphome: !include base-esphome.yaml
   wifi: !include base-wifi.yaml
   ota: !include base-ota.yaml
@@ -34,8 +34,10 @@ api:
 time:
   - platform: sntp
     timezone: "Europe/Vienna"
+    id: sync_time
     servers:
       - 192.168.0.1
+      - at.pool.ntp.org
 
 # see: https://esphome.io/components/button/restart.html
 button:
