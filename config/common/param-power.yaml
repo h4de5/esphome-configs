@@ -3,18 +3,26 @@ current:
   unit_of_measurement: A
   accuracy_decimals: 3
   icon: mdi:current-ac
+  filters:
+    - throttle_average: 3s
 
 voltage:
   name: "${devicename} - Volt"
   unit_of_measurement: V
   accuracy_decimals: 1
   icon: mdi:flash-outline
+  filters:
+    - throttle_average: 3s
 
 power:
   name: "${devicename} - Watt"
   unit_of_measurement: W
   id: "power_wattage"
   icon: mdi:gauge
+  device_class: "power"
+  state_class: "measurement"
+  filters:
+    - throttle_average: 3s
   # on_value_range:
   #   - above: 4.0
   #     then:

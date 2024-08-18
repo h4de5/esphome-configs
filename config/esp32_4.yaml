@@ -4,6 +4,7 @@ substitutions:
   upper_devicename: "ESP32 4"
   devicecomment: "Badezimmer - DHT"
   dht_gpio: "GPIO13"
+  dht_offset: "1.5"
 
 <<: !include common/esp32.yaml
 

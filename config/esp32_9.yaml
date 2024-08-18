@@ -173,7 +173,7 @@ voice_assistant:
       - logger.log: "VoiceAssistant detected wake word"
       - text_sensor.template.publish:
           id: display_text
-          state: "Jaa?"
+          state: "Jo ?"
   on_start: 
     then:
       - logger.log: "VoiceAssistant started pipeline"
@@ -182,7 +182,7 @@ voice_assistant:
       - logger.log: "VoiceAssistant starting intent"
       - text_sensor.template.publish:
           id: display_text
-          state: "^__^"
+          state: ".o~O"
     # - switch.turn_off: use_wake_word
     # - delay: !lambda "if (id(use_wake_word).state) return 200; else return 0;"
     # - media_player.play_media:
@@ -208,15 +208,12 @@ voice_assistant:
   on_intent_end: 
     then:
       - logger.log: "VoiceAssistant ending intent"
-      - text_sensor.template.publish:
-          id: display_text
-          state: ""
   on_error:
     then:
       - logger.log: "VoiceAssistant encountered error"
       - text_sensor.template.publish:
           id: display_text
-          state: " o.O "
+          state: " oO "
   on_end: 
     then:
       - logger.log: "VoiceAssistant ending"

@@ -20,6 +20,7 @@ temperature:
         send_every: 3
         # send_first_at: 3
         quantile: .9
+    - offset: $dht_offset
 
 humidity:
   name: "$upper_devicename - Luftfeuchtigkeit"

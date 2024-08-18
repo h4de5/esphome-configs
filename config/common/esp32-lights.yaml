@@ -16,8 +16,8 @@ light:
   - !include ext-light-rgb.yaml
 
 # wled:
-# e131:
-#  method: unicast
+e131:
+  method: unicast
   # method: multicast
 
 # see: https://github.com/esphome/issues/issues/4645

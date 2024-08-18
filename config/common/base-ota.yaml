@@ -8,16 +8,16 @@
 
 # Enable over the air updates
 ota:
-  safe_mode: true
-  password: !secret api_password
-  on_begin:
-    then:
-      - logger.log: "OTA start"
-  on_end:
-    then:
-      - logger.log: "OTA end"
-  on_error:
-    then:
-      - logger.log:
-          format: "OTA update error %d"
-          args: ["x"]
+  - platform: esphome
+    password: !secret api_password
+    on_begin:
+      then:
+        - logger.log: "OTA start"
+    on_end:
+      then:
+        - logger.log: "OTA end"
+    on_error:
+      then:
+        - logger.log:
+            format: "OTA update error %d"
+            args: ["x"]
