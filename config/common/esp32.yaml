@@ -12,6 +12,8 @@ packages:
   text_sensor: !include base-text_sensor.yaml
   bluetooth: !include base-ble.yaml
 
+# see: https://www.az-delivery.de/en/products/esp-32-dev-kit-c-v4
+# see: https://cdn.shopify.com/s/files/1/1509/1638/files/ESP32_DevKit_C_V4_Pinout.pdf?v=1615364529
 esp32:
   board: az-delivery-devkit-v4
   framework:

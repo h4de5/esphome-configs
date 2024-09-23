@@ -9,12 +9,25 @@ substitutions:
 packages:
   web_server: !include common/base-web_server.yaml
   esphome: !include common/base-esphome.yaml
+  # esphome: !include common/empty.yaml
   wifi: !include common/base-wifi.yaml
   ota: !include common/base-ota.yaml
   sensor: !include common/base-sensor.yaml
   binary_sensor: !include common/base-binary_sensor.yaml
   text_sensor: !include common/empty.yaml
   bluetooth: !include common/empty.yaml
+
+# esphome:
+#   <<: !include common/param-light-effects-lambdas.yaml
+#   name: $devicename
+#   comment: $devicecomment
+#   on_boot:
+#     priority: 500
+#     then:
+#       - lambda: |-
+#           ESP_LOGD("custom", "Free Heap: %u bytes", ESP.getFreeHeap());
+#           ESP_LOGD("custom", "Heap Size: %u bytes", ESP.getHeapSize());
+#           ESP_LOGD("custom", "Task Count: %u", uxTaskGetNumberOfTasks());
 
 
 # # status_led in esp32 should be removed then
@@ -64,15 +77,15 @@ remote_receiver:
   #         event: esphome.ir_command
   #         data_template: 
   #           value: !lambda "return x.data;"
-          # data_template:
-          #   data: '{{ ir_command }}'
-          #   # sender: "$devicename"
-          # variables:
-          #   ir_command: !lambda |-
-          #     int data = x.data;
-          #     char hex[8];
-          #     sprintf(hex, "%#.08X", data);
-          #     return hex;
+  #         data_template:
+  #           data: '{{ ir_command }}'
+  #           # sender: "$devicename"
+  #         variables:
+  #           ir_command: !lambda |-
+  #             int data = x.data;
+  #             char hex[8];
+  #             sprintf(hex, "%#.08X", data);
+  #             return hex;
 
 
 #mdns:
@@ -95,6 +108,8 @@ i2s_audio:
   - id: i2s_out
     i2s_lrclk_pin: GPIO25
     i2s_bclk_pin: GPIO14
+    # master clock makes it worse ..
+    # i2s_mclk_pin: GPIO0
 
 microphone:
   - platform: i2s_audio
@@ -103,7 +118,8 @@ microphone:
     pdm: false
     id: mic_i2s
     i2s_din_pin: GPIO13
-    bits_per_sample: 32bit
+    # bits_per_sample: 32bit
+    bits_per_sample: 16bit
 
 # not needed when using media_player
 # speaker:
@@ -126,21 +142,43 @@ media_player:
     # i2s_dout_pin: GPIO22
     i2s_dout_pin: GPIO32
     mode: mono
+    # mode: stereo
     i2s_audio_id: i2s_out
-
+    # mute_pin: GPIO19
     # see: https://esphome.io/components/media_player/i2s_audio.html#external-dac
     # only after 2023.06
     # i2s_comm_fmt: lsb
     # i2s_comm_fmt: msb
-    on_play:
-      then:
-        - logger.log: "Playback started"
+    # on_state:
+    #   then:
+    #     - logger.log: "Playback State updated"
+    # on_play:
+    #   then:
+    #     - logger.log: "Playback started"
+    #     - lambda: |-
+    #         id(clock_display).set_update_interval(60000);
     on_idle:
       then:
+        # - lambda: |-
+        #     id(clock_display).set_update_interval(500);
         - logger.log: "Playback Idle"
+        - lambda: |-
+            int current_interval = id(clock_display).get_update_interval();
+            ESP_LOGI("custom", "Current update interval: %d ms", current_interval);
+
+            if (id(clock_display).get_update_interval() < 50000) {
+              ESP_LOGI("custom", "New update interval: %d ms", 60000);
+              id(clock_display).set_update_interval(60000);
+            } else {
+            ESP_LOGI("custom", "New update interval: %d ms", 30000);
+              id(clock_display).set_update_interval(30000);
+            }
     on_pause:
       then:
         - logger.log: "Playback Paused"
+        - lambda: |-
+            id(clock_display).set_update_interval(30000);
+        - media_player.stop
 
 # only available for type: esp-idf
 # micro_wake_word:
@@ -258,18 +296,29 @@ display:
   platform: tm1637
   # name: "$devicename - Display"
   id: clock_display
-  clk_pin: GPIO5
-  dio_pin: GPIO17
+  # clk_pin: GPIO5
+  # clk_pin: GPIO18
+  # dio_pin: GPIO17
+  clk_pin: GPIO21
+  dio_pin: GPIO22
   intensity: 0
-  update_interval: 500ms
+  update_interval: 30000ms
+  # update_interval: never
   lambda: |-
-      static int i = 0;
-      i++;
+      // static int i = 0;
+      // i++;
+      ESP_LOGI("custom", "Updating display text");
       if (id(display_text).state != "") {
         it.printf("%s", id(display_text).state);
       } else {
-        if ((i % 2) == 0)
-          it.strftime("%H.%M", id(sync_time).now());
-        else
-          it.strftime("%H%M", id(sync_time).now());
+        it.strftime("%H.%M", id(sync_time).now());
+        // if ((i % 2) == 0)
+        //   it.strftime("%H.%M", id(sync_time).now());
+        // else
+        //   it.strftime("%H%M", id(sync_time).now());
       }
+
+# interval:
+#   - interval: 500ms
+#     then:
+#       - component.update: clock_display
