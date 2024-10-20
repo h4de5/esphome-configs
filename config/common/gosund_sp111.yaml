@@ -37,6 +37,7 @@ binary_sensor:
 
 sensor:
   - !include ext-sensor-wattage.yaml
+  - !include ext-sensor-energy.yaml
   - !include ext-sensor-vcc.yaml
   # see pinout https://templates.blakadder.com/gosund_SP111_v1_1.html
   - platform: hlw8012

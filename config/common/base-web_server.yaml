@@ -1,7 +1,8 @@
 # Enable Web server
 web_server:
   port: 80
-  local: true
+  # webserver v3 is too big to include, will run over 50% flash limit
+  # local: true
   auth:
     username: !secret api_username
     password: !secret api_password
@@ -11,5 +12,5 @@ web_server:
   # js_include: "common/webserver-v1.min.js"
   # js_url: ""
   # see: https://esphome.io/components/web_server.html#here-be-dragons
-  version: 2
+  version: 3
   # js_include: "common/webserver-v2.min.js"

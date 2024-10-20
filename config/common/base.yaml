@@ -46,3 +46,5 @@ button:
   - platform: restart
     # id: "${devicename}_restart"
     name: "${devicename} - Restart"
+    icon: "mdi:restart"
+    device_class: "restart"

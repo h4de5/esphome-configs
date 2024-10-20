@@ -1,0 +1,13 @@
+platform: integration
+sensor: power_wattage
+name: "${devicename} - Energieverbrauch"
+id: energy_spent
+time_unit: h
+unit_of_measurement: "kWh"
+icon: mdi:gauge
+device_class: energy
+state_class: total_increasing
+accuracy_decimals: 3
+filters:
+  # Multiplication factor from W to kW is 0.001
+  - multiply: 0.001

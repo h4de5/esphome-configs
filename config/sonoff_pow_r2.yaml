@@ -38,6 +38,7 @@ binary_sensor:
 
 sensor:
   - !include common/ext-sensor-wattage.yaml
+  - !include common/ext-sensor-energy.yaml
   - !include common/ext-sensor-vcc.yaml
   - platform: cse7766
     # update_interval: 3s
