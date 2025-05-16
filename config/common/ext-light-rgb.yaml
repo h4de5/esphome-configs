@@ -1,7 +1,8 @@
 # platform: fastled_clockless
 # platform: neopixelbus
 platform: esp32_rmt_led_strip
-name: "$devicename - Licht"
+# name: ${devicename} - Licht
+name: "Licht"
 icon: mdi:led-outline
 # chipset: WS2812b
 chipset: WS2812

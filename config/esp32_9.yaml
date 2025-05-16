@@ -135,7 +135,8 @@ microphone:
 # # see: https://esphome.io/components/media_player/i2s_audio
 media_player:
   - platform: i2s_audio
-    name: "$devicename - Media Player"
+    # name: ${devicename} - Media Player
+    name: "Media Player"
     id: player_i2s
     dac_type: external
     # => DIN
@@ -262,7 +263,8 @@ voice_assistant:
 
 switch:
   - platform: template
-    name: "$devicename - Use wake word"
+    # name: ${devicename} - Use wake word
+    name: "Use wake word"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
@@ -284,7 +286,8 @@ text_sensor:
   - !include common/ext-text_sensor-wifi.yaml
   - !include common/ext-text_sensor-version.yaml
   - platform: template
-    name: "$devicename - Display Text"
+    # name: ${devicename} - Display Text
+    name: "Display Text"
     id: display_text
     lambda: |-
       return {""};
