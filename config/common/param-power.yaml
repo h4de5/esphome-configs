@@ -1,5 +1,6 @@
 current:
-  name: "${devicename} - Ampere"
+  # name: "${devicename} - Ampere"
+  name: "Ampere"
   unit_of_measurement: A
   accuracy_decimals: 3
   icon: mdi:current-ac
@@ -7,7 +8,8 @@ current:
     - throttle_average: 3s
 
 voltage:
-  name: "${devicename} - Volt"
+  # name: "${devicename} - Volt"
+  name: "Volt"
   unit_of_measurement: V
   accuracy_decimals: 1
   icon: mdi:flash-outline
@@ -15,7 +17,8 @@ voltage:
     - throttle_average: 3s
 
 power:
-  name: "${devicename} - Watt"
+  # name: "${devicename} - Watt"
+  name: "Watt"
   unit_of_measurement: W
   id: "power_wattage"
   icon: mdi:gauge

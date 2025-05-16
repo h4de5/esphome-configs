@@ -30,7 +30,8 @@ binary_sensor:
     on_press:
       - switch.toggle: "relay_1"
 
-    name: "${devicename} - Button 1"
+    # name: "${devicename} - Button 1"
+    name: "Button 1"
   - platform: gpio
     pin:
       number: GPIO9
@@ -39,7 +40,8 @@ binary_sensor:
     on_press:
       - switch.toggle: "relay_2"
 
-    name: "${devicename} - Button 2"
+    # name: "${devicename} - Button 2"
+    name: "Button 2"
   - platform: gpio
     pin:
       number: GPIO10
@@ -48,7 +50,8 @@ binary_sensor:
     on_press:
       - switch.toggle: "relay_3"
 
-    name: "${devicename} - Button 3"
+    # name: "${devicename} - Button 3"
+    name: "Button 3"
   - platform: gpio
     pin:
       number: GPIO14
@@ -57,32 +60,37 @@ binary_sensor:
     on_press:
       - switch.toggle: "relay_4"
 
-    name: "${devicename} - Button 4"
+    # name: "${devicename} - Button 4"
+    name: "Button 4"
 
 switch:
   - platform: gpio
-    name: "${devicename} - Relay 1"
+    # name: "${devicename} - Relay 1"
+    name: "Relay 1"
     pin: GPIO12
     id: "relay_1"
     on_turn_on:
       - delay: 45min
       - switch.turn_off: "relay_1"
   - platform: gpio
-    name: "${devicename} - Relay 2"
+    # name: "${devicename} - Relay 2"
+    name: "Relay 2"
     pin: GPIO5
     id: "relay_2"
     on_turn_on:
       - delay: 45min
       - switch.turn_off: "relay_2"
   - platform: gpio
-    name: "${devicename} - Relay 3"
+    # name: "${devicename} - Relay 3"
+    name: "Relay 3"
     pin: GPIO4
     id: "relay_3"
     on_turn_on:
       - delay: 45min
       - switch.turn_off: "relay_3"
   - platform: gpio
-    name: "${devicename} - Relay 4"
+    # name: "${devicename} - Relay 4"
+    name: "Relay 4"
     pin: GPIO15
     id: "relay_4"
     on_turn_on:

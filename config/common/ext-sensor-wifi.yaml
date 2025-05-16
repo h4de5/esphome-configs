@@ -1,4 +1,5 @@
 platform: wifi_signal
-name: "${devicename} - Wifi Signal"
+# name: "${devicename} - Wifi Signal"
+name: "Wifi Signal"
 update_interval: 60s
 icon: mdi:wifi

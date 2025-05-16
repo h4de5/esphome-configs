@@ -7,7 +7,6 @@ pin:
 model: AM2302
 temperature:
   name: "$upper_devicename - Temperatur"
-  # unique_id: "sensor.${devicename}_temperatur_roh"
   # Optional variables:
   unit_of_measurement: "°C"
   icon: "mdi:thermometer"
@@ -24,7 +23,6 @@ temperature:
 
 humidity:
   name: "$upper_devicename - Luftfeuchtigkeit"
-  # unique_id: "sensor.${devicename}_luftfeuchtigkeit_roh"
   unit_of_measurement: "%"
   icon: "mdi:water-percent"
   device_class: "humidity"

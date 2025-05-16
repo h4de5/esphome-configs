@@ -1,5 +1,6 @@
 platform: template
-name: "${devicename} - Consumer on"
+# name: "${devicename} - Consumer on"
+name: "Consumer on"
 # icon: mdi:power-plug-outline
 lambda: |-
   if (id(power_wattage).state > ${consumer_min_wattage}) {

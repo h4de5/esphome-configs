@@ -1,6 +1,7 @@
 platform: integration
 sensor: power_wattage
-name: "${devicename} - Energieverbrauch"
+# name: "${devicename} - Energieverbrauch"
+name: "Energieverbrauch"
 id: energy_spent
 time_unit: h
 unit_of_measurement: "kWh"

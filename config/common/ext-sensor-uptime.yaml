@@ -1,5 +1,6 @@
 platform: uptime
-name: ${devicename} - Uptime
+# name: "${devicename} - Uptime"
+name: "Uptime"
 update_interval: 360s
 icon: mdi:clock-outline
 unit_of_measurement: h

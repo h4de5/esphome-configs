@@ -18,7 +18,7 @@ wifi:
 # good idea - to have it
 # bad idea - when network/hass is down, all devices start their AP
 # ap:
-#   ssid: "${devicename} Hotspot"
+#   ssid: "${devicename} - Hotspot"
 #   password: "password"
 
 # activate a captive portal when access point is on

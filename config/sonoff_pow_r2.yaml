@@ -24,6 +24,7 @@ esp8266:
 uart:
   rx_pin: RX
   baud_rate: 4800
+  parity: EVEN
 
 binary_sensor:
   - !include common/ext-binary_sensor-consumer.yaml
@@ -32,7 +33,8 @@ binary_sensor:
       number: GPIO0
       mode: INPUT_PULLUP
       inverted: True
-    name: "${devicename} - Schalter Status"
+    # name: "${devicename} - Schalter Status"
+    name: "Schalter Status"
     on_press:
       - switch.toggle: button_switch
 
@@ -46,7 +48,8 @@ sensor:
 
 switch:
   - platform: template
-    name: "${devicename} - Schalter"
+    # name: "${devicename} - Schalter"
+    name: "Schalter"
     icon: mdi:power
     optimistic: true
     id: button_switch

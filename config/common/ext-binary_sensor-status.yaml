@@ -1,4 +1,5 @@
 platform: status
-name: "${devicename} - Status"
+# name: "${devicename} - Status"
+name: "Status"
 # icon: mdi:lan-connect
 device_class: connectivity

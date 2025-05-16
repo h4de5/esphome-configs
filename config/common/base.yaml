@@ -44,7 +44,7 @@ safe_mode:
 # see: https://esphome.io/components/button/restart.html
 button:
   - platform: restart
-    # id: "${devicename}_restart"
-    name: "${devicename} - Restart"
+    # name: "${devicename} - Restart"
+    name: "Restart"
     icon: "mdi:restart"
     device_class: "restart"

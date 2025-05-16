@@ -68,7 +68,8 @@ output:
 
 switch:
   - platform: template
-    name: "${devicename} - Schalter"
+    # name: "${devicename} - Schalter"
+    name: "Schalter"
     icon: mdi:power
     optimistic: true
     id: button_switch

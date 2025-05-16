@@ -1,4 +1,5 @@
 platform: adc
 pin: VCC
-name: "${devicename} - VCC Volt"
+# name: "${devicename} - VCC Volt"
+name: "VCC Volt"
 icon: mdi:flash-outline

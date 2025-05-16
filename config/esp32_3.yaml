@@ -58,7 +58,8 @@ binary_sensor:
   # light on/off button
   - platform: gpio
     device_class: light
-    name: "${devicename} - Button 1"
+    # name: "${devicename} - Button 1"
+    name: "Button 1"
     id: "button_1"
     pin:
       number: GPIO32
@@ -70,7 +71,8 @@ binary_sensor:
   # light effect switch button
   - platform: gpio
     device_class: light
-    name: "${devicename} - Button 2"
+    # name: "${devicename} - Button 2"
+    name: "Button 2"
     id: "button_2"
     pin:
       number: GPIO25

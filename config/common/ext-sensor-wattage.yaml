@@ -1,5 +1,6 @@
 platform: total_daily_energy
-name: "${devicename} - Tagesverbrauch"
+# name: "${devicename} - Tagesverbrauch"
+name: "Tagesverbrauch"
 power_id: "power_wattage"
 filters:
   # Multiplication factor from W to kW is 0.001

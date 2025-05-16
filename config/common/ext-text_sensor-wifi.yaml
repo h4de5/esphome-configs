@@ -1,11 +1,13 @@
 platform: wifi_info
 ip_address:
-  name: "${devicename} - IP"
+  # name: "${devicename} - IP"
+  name: "IP"
   icon: mdi:ip-network-outline
 # ssid:
 #   name: ESP Connected SSID
 # bssid:
 #   name: ESP Connected BSSID
 mac_address:
-  name: "${devicename} - Mac"
+  # name: "${devicename} - Mac"
+  name: "Mac"
   icon: mdi:network-outline
