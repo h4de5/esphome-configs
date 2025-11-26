@@ -15,7 +15,8 @@ packages:
   sensor: !include common/base-sensor.yaml
   binary_sensor: !include common/base-binary_sensor.yaml
   text_sensor: !include common/empty.yaml
-  bluetooth: !include common/empty.yaml
+  bluetooth: !include common/base-ble.yaml
+  # bluetooth: !include common/empty.yaml
 
 # esphome:
 #   <<: !include common/param-light-effects-lambdas.yaml

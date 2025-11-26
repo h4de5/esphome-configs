@@ -2,11 +2,25 @@
 # see: https://esphome.io/components/esp32_ble_tracker.html#on-ble-advertise
 esp32_ble_tracker:
   scan_parameters:
-    interval: 1100ms
-    window: 1100ms
-    active: true
+    continuous: false
+    interval: 5100ms
+    window: 5100ms
+#    active: true
+
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+  on_client_connected:
+    - esp32_ble_tracker.start_scan:
+       continuous: true
+  on_client_disconnected:
+    - esp32_ble_tracker.stop_scan:
 
 # https://esphome.io/components/bluetooth_proxy.html
-# https://github.com/esphome/bluetooth-proxies/blob/main/esp32-generic.yaml
+# https://github.com/esphome/bluetooth-proxies/blob/main/esp32-generic/esp32-generic.yaml
+
+
 bluetooth_proxy:
   active: true
+  connection_slots: 2

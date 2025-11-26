@@ -32,10 +32,12 @@ packages:
   sensor: !include common/base-sensor.yaml
   binary_sensor: !include common/base-binary_sensor.yaml
   text_sensor: !include common/base-text_sensor.yaml
+  bluetooth: !include common/base-ble.yaml
   # bluetooth: !include common/empty.yaml
 
 sensor:
   - !include common/ext-sensor-dht.yaml
+  - !include common/ext-template-dht.yaml
 
 # # esphome:
 # #   includes:

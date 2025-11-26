@@ -10,6 +10,7 @@ packages:
   sensor: !include base-sensor.yaml
   binary_sensor: !include base-binary_sensor.yaml
   text_sensor: !include base-text_sensor.yaml
+  # bluetooth: !include empty.yaml
   bluetooth: !include base-ble.yaml
 
 # see: https://www.az-delivery.de/en/products/esp-32-dev-kit-c-v4

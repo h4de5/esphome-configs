@@ -3,7 +3,7 @@ substitutions:
   devicename: "esp32_5"
   upper_devicename: "ESP32 5"
   devicecomment: "Kinderzimmer Jakob - RGB LED"
-  number_leds: "104"
+  number_leds: "108"
   boot_brightness: "45%"
   boot_effect: "Color change"
 
@@ -17,4 +17,5 @@ packages:
   sensor: !include common/base-sensor.yaml
   binary_sensor: !include common/base-binary_sensor.yaml
   text_sensor: !include common/base-text_sensor.yaml
-  bluetooth: !include common/empty.yaml
+  bluetooth: !include common/base-ble.yaml
+  # bluetooth: !include common/empty.yaml

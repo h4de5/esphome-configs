@@ -6,7 +6,7 @@ name: "Licht"
 icon: mdi:led-outline
 # chipset: WS2812b
 chipset: WS2812
-rmt_channel: 0
+# rmt_channel: 0
 # variant: WS2812X
 # pin: D1
 # U2 TX 34

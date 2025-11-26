@@ -1,6 +1,3 @@
 sensor:
   - !include ext-sensor-wifi.yaml
   - !include ext-sensor-uptime.yaml
-# sensor:
-#   - <<: !include ext-sensor-wifi.yaml
-#   - <<: !include ext-sensor-uptime.yaml

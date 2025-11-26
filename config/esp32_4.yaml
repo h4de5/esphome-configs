@@ -10,3 +10,4 @@ substitutions:
 
 sensor:
   - !include common/ext-sensor-dht.yaml
+  - !include common/ext-template-dht.yaml

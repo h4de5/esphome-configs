@@ -1,0 +1,7 @@
+platform: template
+name: "Taupunkt"
+lambda: |-
+  return (243.5*(log(id(humidity_sensor).state/100)+((17.67*id(temperature_sensor).state)/(243.5+id(temperature_sensor).state)))/(17.67-log(id(humidity_sensor).state/100)-((17.67*id(temperature_sensor).state)/(243.5+id(temperature_sensor).state))));
+unit_of_measurement: °C
+update_interval: 120s
+icon: 'mdi:thermometer-water'

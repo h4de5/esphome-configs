@@ -6,8 +6,8 @@ pin:
   mode: INPUT_PULLUP
 model: AM2302
 temperature:
-  name: "$upper_devicename - Temperatur"
-  # Optional variables:
+  name: "Temperatur"
+  id: temperature_sensor
   unit_of_measurement: "°C"
   icon: "mdi:thermometer"
   device_class: "temperature"
@@ -22,7 +22,8 @@ temperature:
     - offset: $dht_offset
 
 humidity:
-  name: "$upper_devicename - Luftfeuchtigkeit"
+  name: "Luftfeuchtigkeit"
+  id: humidity_sensor
   unit_of_measurement: "%"
   icon: "mdi:water-percent"
   device_class: "humidity"
