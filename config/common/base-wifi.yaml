@@ -1,20 +1,28 @@
 
 wifi:
   networks:
-  - ssid: !secret wifi_name_panlab
-    password: !secret wifi_pass_panlab
-  - ssid: !secret wifi_name_home
-    password: !secret wifi_pass_home
-  # - ssid: !secret wifi_name_panlab2
-  #   password: !secret wifi_pass_panlab2
+  #   - ssid: !secret wifi_name_panlab
+  #     password: !secret wifi_pass_panlab
+  #   - ssid: !secret wifi_name_panlab2
+  #     password: !secret wifi_pass_panlab2
+    - ssid: !secret wifi_name_home
+      password: !secret wifi_pass_home
+      hidden: true
   # ssid: !secret wifi_name_home
   # password: !secret wifi_pass_home
   # fast connect only works with single network
-  # fast_connect:
-  #   on
+  fast_connect: true
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   power_save_mode: LIGHT
+
+  min_auth_mode: WPA2
+
+  on_connect:
+    - logger.log: "Connected to WiFi!"
+  on_disconnect:
+    - logger.log: "Disconnected from WiFi!"
+
 # good idea - to have it
 # bad idea - when network/hass is down, all devices start their AP
 # ap:

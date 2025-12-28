@@ -2,7 +2,7 @@ substitutions:
   # ESP für Büro
   devicename: "esp32_1"
   upper_devicename: "ESP32 1"
-  devicecomment: "Büro - DHT + RGB LED"
+  devicecomment: "Büro - DHT"
   number_leds: "1"
   boot_brightness: "10%"
   boot_effect: "none"

@@ -1,0 +1,4 @@
+platform: version
+name: "Build Version"
+id: build_version
+icon: mdi:cube-outline

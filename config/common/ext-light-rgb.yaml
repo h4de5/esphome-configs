@@ -12,7 +12,8 @@ chipset: WS2812
 # U2 TX 34
 pin: GPIO17
 num_leds: $number_leds
-rgb_order: GRB
+# rgb_order: GRB
+rgb_order: $rgb_order
 # restore_mode: RESTORE_DEFAULT_OFF
 # type: GRB
 on_turn_on:

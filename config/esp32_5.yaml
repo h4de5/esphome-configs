@@ -6,6 +6,8 @@ substitutions:
   number_leds: "108"
   boot_brightness: "45%"
   boot_effect: "Color change"
+  rgb_order: GRB
+
 
 <<: !include common/esp32-lights.yaml
 

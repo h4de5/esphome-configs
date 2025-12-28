@@ -1,4 +1,8 @@
-platform: version
-# name: "${devicename} - Version"
+platform: template
 name: "Version"
-icon: mdi:cube-outline
+icon: mdi:tag-outline
+# version is already taken internally
+# id: version
+lambda: |-
+      std::string v = id(build_version).state;
+      return v.substr(0, v.find(' '));

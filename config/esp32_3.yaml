@@ -3,10 +3,12 @@ substitutions:
   devicename: "esp32_3"
   upper_devicename: "ESP32 3"
   devicecomment: "Wohnzimmer - RGB LED Christbaum + Dimmer + Button"
-  number_leds: "64"
+  # number_leds: "64" # gut
+  number_leds: 97
   boot_brightness: "50%"
   # TODO: disable on_turn on handler because brightness adc will call it often
   boot_effect: "Color change"
+  rgb_order: RGB
 
 globals:
   - id: current_effect

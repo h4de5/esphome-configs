@@ -1,8 +1,8 @@
 substitutions:
-  # steckdose -
+  # steckdose - Lichterkette
   devicename: "gosund_sp111_7"
   upper_devicename: "Gosund SP111 7"
-  devicecomment: "Wohnzimmer -"
+  devicecomment: "Lichterkette"
   # Higher value gives lower watt readout
   current_res: "0.00280"
   # Lower value gives lower voltage readout

@@ -2,7 +2,20 @@ substitutions:
   # ESP
   devicename: "esp32_9"
   upper_devicename: "ESP32 9"
-  devicecomment: "ESP32 9"
+  devicecomment: "Büro - Uhrzeit, Micro, Lautsprecher"
+  PIN_microphone: GPIO13
+
+  PIN_I2S_IN_LRCLK: GPIO27
+  PIN_I2S_IN_BCLK: GPIO26
+  PIN_I2S_OUT_LRCLK: GPIO25
+  PIN_I2S_OUT_BCLK: GPIO14
+  PIN_I2S_MEDIAPLAYER_OUT: GPIO32
+  PIN_I2S_MEDIAPLAYER_MUTE: GPIO19
+
+  PIN_DISPLAY_CLK: GPIO21
+  PIN_DISPLAY_DIO: GPIO22
+
+  PIN_RECEIVER: GPIO33
 
 <<: !include common/esp32.yaml
 
@@ -15,8 +28,8 @@ packages:
   sensor: !include common/base-sensor.yaml
   binary_sensor: !include common/base-binary_sensor.yaml
   text_sensor: !include common/empty.yaml
-  bluetooth: !include common/base-ble.yaml
-  # bluetooth: !include common/empty.yaml
+  # bluetooth: !include common/base-ble.yaml
+  bluetooth: !include common/empty.yaml
 
 # esphome:
 #   <<: !include common/param-light-effects-lambdas.yaml
@@ -56,38 +69,19 @@ logger:
 
 remote_receiver:
   pin:
-    number: GPIO33
+    number: $PIN_RECEIVER
     inverted: True
     mode: INPUT_PULLUP
   dump: all
-  # on_jvc: 
-  #   then:
-  #     - homeassistant.event:
-  #         event: esphome.ir_command
-  #         data_template: 
-  #           value: !lambda "return x.data;"
+  buffer_size: 2kB
+  idle: 50ms
+  filter: 100us
   on_nec:
     then:
       - homeassistant.event:
           event: esphome.ir_command
           data_template: 
             value: !lambda "return x.command;"
-  # on_lg:
-  #   then:
-  #     - homeassistant.event:
-  #         event: esphome.ir_command
-  #         data_template: 
-  #           value: !lambda "return x.data;"
-  #         data_template:
-  #           data: '{{ ir_command }}'
-  #           # sender: "$devicename"
-  #         variables:
-  #           ir_command: !lambda |-
-  #             int data = x.data;
-  #             char hex[8];
-  #             sprintf(hex, "%#.08X", data);
-  #             return hex;
-
 
 #mdns:
 #  disabled: true
@@ -100,27 +94,14 @@ remote_receiver:
 # see: https://medium.com/@the_smart_home_maker/use-esphome-and-home-assistant-to-replace-alexa-with-local-voice-assistant-part-i-prototype-1ff9f55602c0
 
 
+wifi:
+  on_connect:
+    - lambda: |-
+        ESP_LOGI("wifi", "Wifi connected successfully");
+    - media_player.volume_set:
+        id: player_i2s
+        volume: 15%
 
-# # see: https://esphome.io/components/i2s_audio
-i2s_audio:
-  - id: i2s_in
-    i2s_lrclk_pin: GPIO27
-    i2s_bclk_pin: GPIO26
-  - id: i2s_out
-    i2s_lrclk_pin: GPIO25
-    i2s_bclk_pin: GPIO14
-    # master clock makes it worse ..
-    # i2s_mclk_pin: GPIO0
-
-microphone:
-  - platform: i2s_audio
-    i2s_audio_id: i2s_in
-    adc_type: external
-    pdm: false
-    id: mic_i2s
-    i2s_din_pin: GPIO13
-    # bits_per_sample: 32bit
-    bits_per_sample: 16bit
 
 # not needed when using media_player
 # speaker:
@@ -133,69 +114,13 @@ microphone:
 #     mode: stereo
 
 
-# # see: https://esphome.io/components/media_player/i2s_audio
-media_player:
-  - platform: i2s_audio
-    # name: ${devicename} - Media Player
-    name: "Media Player"
-    id: player_i2s
-    dac_type: external
-    # => DIN
-    # i2s_dout_pin: GPIO22
-    i2s_dout_pin: GPIO32
-    mode: mono
-    # mode: stereo
-    i2s_audio_id: i2s_out
-    # mute_pin: GPIO19
-    # see: https://esphome.io/components/media_player/i2s_audio.html#external-dac
-    # only after 2023.06
-    # i2s_comm_fmt: lsb
-    # i2s_comm_fmt: msb
-    # on_state:
-    #   then:
-    #     - logger.log: "Playback State updated"
-    # on_play:
-    #   then:
-    #     - logger.log: "Playback started"
-    #     - lambda: |-
-    #         id(clock_display).set_update_interval(60000);
-    on_idle:
-      then:
-        # - lambda: |-
-        #     id(clock_display).set_update_interval(500);
-        - logger.log: "Playback Idle"
-        - lambda: |-
-            int current_interval = id(clock_display).get_update_interval();
-            ESP_LOGI("custom", "Current update interval: %d ms", current_interval);
-
-            if (id(clock_display).get_update_interval() < 50000) {
-              ESP_LOGI("custom", "New update interval: %d ms", 60000);
-              id(clock_display).set_update_interval(60000);
-            } else {
-            ESP_LOGI("custom", "New update interval: %d ms", 30000);
-              id(clock_display).set_update_interval(30000);
-            }
-    on_pause:
-      then:
-        - logger.log: "Playback Paused"
-        - lambda: |-
-            id(clock_display).set_update_interval(30000);
-        - media_player.stop
-
-# only available for type: esp-idf
-# micro_wake_word:
-#   model: alexa
-#   on_wake_word_detected:
-#     then:
-#       - voice_assistant.start:
-#           wake_word: !lambda return wake_word
-
-
 voice_assistant:
   microphone: mic_i2s
-  # speaker: speaker_i2s
+  # micro_wake_word: # only in esp-idf
+  # speaker: speaker_i2s # used with media_player below
   media_player: player_i2s
   use_wake_word: false
+  conversation_timeout: 120s
   noise_suppression_level: 3
   auto_gain: 31dBFS
   volume_multiplier: 2.0
@@ -205,24 +130,39 @@ voice_assistant:
     then:
       - voice_assistant.stop:
   # see https://community.home-assistant.io/t/play-sound-when-wakeword-detected/653928/13
+
+  on_intent_start:
+    then:
+      - logger.log: "VoiceAssistant started intent"
+      - text_sensor.template.publish:
+          id: display_text
+          state: ".o~O"
+  on_intent_progress:
+    then:
+      - logger.log: "VoiceAssistant progressing intent"
+  on_intent_end: 
+    then:
+      - logger.log: "VoiceAssistant ended intent"
+
   on_listening: 
     then:
-      - logger.log: "VoiceAssistant starts listening"
+      - logger.log: "VoiceAssistant started listening"
+  on_start: 
+    then:
+      - logger.log: "VoiceAssistant started pipeline"
   on_wake_word_detected:
     then:
       - logger.log: "VoiceAssistant detected wake word"
       - text_sensor.template.publish:
           id: display_text
           state: "Jo ?"
-  on_start: 
+  on_end: 
     then:
-      - logger.log: "VoiceAssistant started pipeline"
-  on_intent_start:
-    then:
-      - logger.log: "VoiceAssistant starting intent"
+      - logger.log: "VoiceAssistant ended pipeline"
       - text_sensor.template.publish:
           id: display_text
-          state: ".o~O"
+          state: ""
+
     # - switch.turn_off: use_wake_word
     # - delay: !lambda "if (id(use_wake_word).state) return 200; else return 0;"
     # - media_player.play_media:
@@ -242,29 +182,122 @@ voice_assistant:
     # - switch.turn_on: use_wake_word
     # # - voice_assistant.start_continuous
 
+  on_tts_start:
+    then:
+      - logger.log: "VoiceAssistant started Speech2Text"
+
   on_stt_end: 
     then:
-      - logger.log: "VoiceAssistant finished Speech2Text"
-  on_intent_end: 
-    then:
-      - logger.log: "VoiceAssistant ending intent"
+      - logger.log: "VoiceAssistant ended Speech2Text"
+
   on_error:
     then:
       - logger.log: "VoiceAssistant encountered error"
       - text_sensor.template.publish:
           id: display_text
           state: " oO "
-  on_end: 
-    then:
-      - logger.log: "VoiceAssistant ending"
-      - text_sensor.template.publish:
-          id: display_text
-          state: ""
-  
+
+
+# see: https://esphome.io/components/microphone/
+# see: https://esphome.io/components/microphone/i2s_audio/
+microphone:
+  - platform: i2s_audio
+    id: mic_i2s
+    i2s_audio_id: i2s_in
+    adc_type: external
+    pdm: false
+    i2s_din_pin: $PIN_microphone
+    # i2s_din_pin: GPIO13
+    # bits_per_sample: 32bit
+
+    # bits_per_sample: 16bit
+    # # more try-outs
+    # bits_per_channel: 16bit
+    # use_apll: true
+    # i2s_mode: primary
+
+
+# see: https://esphome.io/components/i2s_audio
+i2s_audio:
+  - id: i2s_in
+    # i2s_lrclk_pin: GPIO27
+    i2s_lrclk_pin: $PIN_I2S_IN_LRCLK
+    # i2s_bclk_pin: GPIO26
+    i2s_bclk_pin: $PIN_I2S_IN_BCLK
+  - id: i2s_out
+    i2s_lrclk_pin: $PIN_I2S_OUT_LRCLK
+    # i2s_lrclk_pin: GPIO25
+    i2s_bclk_pin: $PIN_I2S_OUT_BCLK
+    # i2s_bclk_pin: GPIO14
+    # master clock makes it worse ..
+    # i2s_mclk_pin: GPIO0
+    
+
+# only available for type: esp-idf
+# micro_wake_word:
+#   models:
+#     - model: alexa
+#   microphone: mic_i2s
+#   # on_wake_word_detected:
+#   #   then:
+#   #     - voice_assistant.start:
+#   #         wake_word: !lambda return wake_word
+
+
+# see: https://esphome.io/components/media_player/i2s_audio
+media_player:
+  - platform: i2s_audio
+    name: "Media Player"
+    id: player_i2s
+    dac_type: external
+    # => DIN
+    # i2s_dout_pin: GPIO22
+    i2s_dout_pin: $PIN_I2S_MEDIAPLAYER_OUT
+    mute_pin: $PIN_I2S_MEDIAPLAYER_MUTE
+    mode: mono
+    # mode: stereo
+    i2s_audio_id: i2s_out
+    # mute_pin: GPIO19
+    # see: https://esphome.io/components/media_player/i2s_audio.html#external-dac
+    # only after 2023.06
+    # i2s_comm_fmt: lsb
+    # i2s_comm_fmt: msb
+    # on_state:
+    #   then:
+    #     - logger.log: "Playback State updated"
+    on_play:
+      then:
+        - logger.log: "MediaPlayer started"
+        # - lambda: |-
+        #     id(clock_display).set_update_interval(60000);
+    on_idle:
+      then:
+        # - lambda: |-
+        #     id(clock_display).set_update_interval(500);
+        - logger.log: "MediaPlayer Idle"
+        # - lambda: |-
+        #     int current_interval = id(clock_display).get_update_interval();
+        #     ESP_LOGI("custom", "Current update interval: %d ms", current_interval);
+
+        #     if (id(clock_display).get_update_interval() < 50000) {
+        #       ESP_LOGI("custom", "New update interval: %d ms", 60000);
+        #       id(clock_display).set_update_interval(60000);
+        #     } else {
+        #     ESP_LOGI("custom", "New update interval: %d ms", 30000);
+        #       id(clock_display).set_update_interval(30000);
+        #     }
+    on_pause:
+      then:
+        - logger.log: "MediaPlayer Paused"
+        # - lambda: |-
+        #     id(clock_display).set_update_interval(30000);
+        # - media_player.stop
+
+
+
 
 switch:
   - platform: template
-    # name: ${devicename} - Use wake word
     name: "Use wake word"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
@@ -285,9 +318,9 @@ switch:
 # see available characters: https://esphome.io/components/display/max7219#display-max7219-characters
 text_sensor:
   - !include common/ext-text_sensor-wifi.yaml
+  - !include common/ext-text_sensor-buildversion.yaml
   - !include common/ext-text_sensor-version.yaml
   - platform: template
-    # name: ${devicename} - Display Text
     name: "Display Text"
     id: display_text
     lambda: |-
@@ -298,20 +331,16 @@ text_sensor:
 # see: https://esphome.io/components/display/tm1637.html
 display:
   platform: tm1637
-  # name: "$devicename - Display"
   id: clock_display
-  # clk_pin: GPIO5
-  # clk_pin: GPIO18
-  # dio_pin: GPIO17
-  clk_pin: GPIO21
-  dio_pin: GPIO22
+  clk_pin: $PIN_DISPLAY_CLK
+  dio_pin: $PIN_DISPLAY_DIO
   intensity: 0
   update_interval: 30000ms
   # update_interval: never
   lambda: |-
       // static int i = 0;
       // i++;
-      ESP_LOGI("custom", "Updating display text");
+      ESP_LOGI("custom", "Display updated text");
       if (id(display_text).state != "") {
         it.printf("%s", id(display_text).state);
       } else {

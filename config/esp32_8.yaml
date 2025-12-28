@@ -1,7 +1,92 @@
 substitutions:
-  # ESP
+  # ESP Büro - e-Ink Display
   devicename: "esp32_8"
   upper_devicename: "ESP32 8"
-  devicecomment: "ESP32 8"
+  devicecomment: "Büro - e-Ink Display"
 
 <<: !include common/esp32.yaml
+
+packages:
+  # web_server: !include base-web_server.yaml
+  esphome: !include common/base-esphome.yaml
+  wifi: !include common/base-wifi.yaml
+  ota: !include common/base-ota.yaml
+  sensor: !include common/base-sensor.yaml
+  binary_sensor: !include common/base-binary_sensor.yaml
+  text_sensor: !include common/base-text_sensor.yaml
+  # bluetooth: !include common/base-ble.yaml
+  bluetooth: !include common/empty.yaml
+
+font:
+  - file: 'assets/OpenSans.ttf'
+    id: font1
+    size: 16
+
+# image:
+#   - file: "assets/image-indexed.bmp"
+#     type: RGB
+#     id: image_indexed
+
+# http_request:
+#   verify_ssl: false
+
+# online_image:
+#   - url: "https://dev.pauschenwein.net/lan/assets/image-indexed.png"
+#     type: RGB
+#     format: png
+#     id: my_image
+#     on_download_finished:
+#       - lambda: |-
+#           if (cached) {
+#             ESP_LOGI("online_image", "Cache hit: using cached image");
+#           } else {
+#             ESP_LOGI("online_image", "Cache miss: fresh download");
+#           }
+#       - component.update: my_display
+#     on_error: 
+#       lambda: |-
+#         ESP_LOGI("online_image", "error downloading the image");
+
+wifi:
+  on_connect:
+    - lambda: |-
+        ESP_LOGI("wifi", "Wifi connected successfully");
+    # - component.update: my_image
+    - component.update: my_display
+
+spi:
+  clk_pin: GPIO14
+  mosi_pin: GPIO27
+
+display:
+  - platform: waveshare_epaper
+    id: my_display
+    cs_pin: GPIO26
+    dc_pin: GPIO25
+    busy_pin:
+      number: GPIO33
+      inverted: true
+    reset_pin: GPIO32
+    model: 7.30in-f
+    # full_update_every: 30
+    # auto_clear_enabled: true
+    update_interval: 100min
+    # lambda: |-
+    #   it.image(0, 0, id(my_image));
+
+    lambda: |-
+        const auto BLACK   = Color(0,   0,   0,   0);
+        const auto RED     = Color(255, 0,   0,   0);
+        const auto GREEN   = Color(0,   255, 0,   0);
+        const auto BLUE    = Color(0,   0,   255, 0);
+        const auto YELLOW  = Color(255, 255, 0,   0);
+        const auto ORANGE  = Color(255, 127, 0,   0);
+        const auto WHITE   = Color(255, 255, 255, 0);
+
+        it.print(0, 0, id(font1), BLACK, "Hello World in BLACK!");
+        it.print(50, 50, id(font1), RED, "Hello World in RED!");
+        it.print(100, 100, id(font1), GREEN, "Hello World in GREEN!");
+        it.print(150, 150, id(font1), BLUE, "Hello World in BLUE!");
+        it.print(200, 200, id(font1), YELLOW, "Hello World in YELLOW!");
+        it.print(250, 250, id(font1), ORANGE, "Hello World in ORANGE!");
+        it.print(300, 300, id(font1), WHITE, "Hello World in WHITE!");

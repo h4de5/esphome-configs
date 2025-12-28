@@ -3,8 +3,8 @@
 esp32_ble_tracker:
   scan_parameters:
     continuous: false
-    interval: 5100ms
-    window: 5100ms
+    interval: 5000ms
+    window: 500ms
 #    active: true
 
 
@@ -13,7 +13,7 @@ api:
     key: !secret api_encryption_key
   on_client_connected:
     - esp32_ble_tracker.start_scan:
-       continuous: true
+        continuous: true
   on_client_disconnected:
     - esp32_ble_tracker.stop_scan:
 
