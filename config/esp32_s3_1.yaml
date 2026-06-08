@@ -1,0 +1,773 @@
+substitutions:
+  devicename: "esp32_s3_1"
+  upper_devicename: "ESP32 S3 1"
+  devicecomment: "David Wecker - Sendspin Radio + Display (Waveshare ESP32-S3 Touch-LCD 1.85)"
+
+  # ── HA entity IDs (anpassen pro Gerät) ──
+  ha_media_player: "media_player.david_wecker"
+  ha_media_player_speaker: "media_player.david_wecker_lautsprecher"
+  ha_target_player: "media_player.david_lautsprecher"
+  ha_alarm_automation: "automation.david_wecken"
+  ha_random_script: "script.musik_start_zufallslieder"
+  ha_calendar_sensor: "sensor.david_kalender"
+
+  # ── Display ──
+  display_rotation: "90°"
+
+  # Display (ST77916, QSPI, 360x360 round)
+  PIN_LCD_SDA0: GPIO46
+  PIN_LCD_SDA1: GPIO45
+  PIN_LCD_SDA2: GPIO42
+  PIN_LCD_SDA3: GPIO41
+  PIN_LCD_SCK: GPIO40
+  PIN_LCD_CS: GPIO21
+  PIN_LCD_BL: GPIO5
+  # LCD_RST -> PCA9554 pin 1
+  # TP_RST  -> PCA9554 pin 0
+
+  # Audio DAC (ES8311, I2S)
+  PIN_I2S_MCLK: GPIO2
+  PIN_I2S_BCLK: GPIO48
+  PIN_I2S_LRCK: GPIO38
+  PIN_I2S_DOUT: GPIO47
+
+  # I2C (shared bus: touch, IMU, RTC, GPIO expander, ES8311, ES7210)
+  PIN_I2C_SCL: GPIO10
+  PIN_I2C_SDA: GPIO11
+
+  # TF Card (SDMMC 4-bit)
+  PIN_SD_CLK: GPIO15
+  PIN_SD_CMD: GPIO14
+  PIN_SD_D0: GPIO16
+  PIN_SD_D1: GPIO17
+  PIN_SD_D2: GPIO12
+  PIN_SD_D3: GPIO13
+
+  # Buttons
+  PIN_BOOT: GPIO0
+
+  # Touch
+  PIN_TOUCH_INT: GPIO4
+
+  # RTC
+  PIN_RTC_INT: GPIO6
+
+  # Backlight PWM
+  PIN_LCD_BL_PWM: GPIO5
+
+<<: !include common/esp32-s3.yaml
+
+# Status-LED auf GPIO19 (unused, kein physischer Pin) – deaktiviert die blaue LED auf GPIO2
+status_led:
+  pin:
+    number: GPIO19
+    inverted: False
+
+esphome:
+  friendly_name: "David Wecker"
+
+i2c:
+  sda: $PIN_I2C_SDA
+  scl: $PIN_I2C_SCL
+  scan: true
+  id: bus_int
+  frequency: 400kHz
+
+pca9554:
+  - id: pca9554_device
+    i2c_id: bus_int
+
+i2s_audio:
+  i2s_lrclk_pin: $PIN_I2S_LRCK
+  i2s_bclk_pin: $PIN_I2S_BCLK
+
+speaker:
+  - platform: i2s_audio
+    id: speaker_id
+    dac_type: external
+    i2s_dout_pin: $PIN_I2S_DOUT
+    channel: left
+
+sendspin:
+  id: sendspin_hub
+
+media_source:
+  - platform: sendspin
+    id: sendspin_source
+
+media_player:
+  - platform: speaker_source
+    name: "David Wecker"
+    id: sendspin_player
+    media_pipeline:
+      speaker: speaker_id
+      sources:
+        - sendspin_source
+  - platform: speaker
+    id: local_media_player
+    name: "David Wecker Lautsprecher"
+    announcement_pipeline:
+      speaker: speaker_id
+
+script:
+  - id: script_play_pause
+    then:
+      - homeassistant.service:
+          service: media_player.media_play_pause
+          data:
+            entity_id: ${ha_target_player}
+      - component.update: main_display
+  - id: script_next
+    then:
+      - homeassistant.service:
+          service: media_player.media_next_track
+          data:
+            entity_id: ${ha_target_player}
+      - component.update: main_display
+  - id: script_previous
+    then:
+      - homeassistant.service:
+          service: media_player.media_previous_track
+          data:
+            entity_id: ${ha_target_player}
+      - component.update: main_display
+  - id: script_set_volume
+    then:
+      - homeassistant.service:
+          service: media_player.volume_set
+          data:
+            entity_id: ${ha_target_player}
+            volume_level: !lambda 'return id(target_volume);'
+      - component.update: main_display
+  - id: script_start_random
+    then:
+      - homeassistant.service:
+          service: ${ha_random_script}
+          data:
+            target_player: ${ha_target_player}
+  - id: script_stop_music
+    then:
+      - homeassistant.service:
+          service: media_player.media_stop
+          data:
+            entity_id: ${ha_target_player}
+      - component.update: main_display
+
+globals:
+  - id: marquee_offset
+    type: int
+    initial_value: '0'
+  - id: last_meta
+    type: std::string
+    initial_value: ''
+  - id: target_volume
+    type: float
+    initial_value: '0.5'
+  - id: flash_counter
+    type: int
+    initial_value: '0'
+  - id: flash_x
+    type: int
+    initial_value: '0'
+  - id: flash_y
+    type: int
+    initial_value: '0'
+  - id: flash_w
+    type: int
+    initial_value: '0'
+  - id: flash_h
+    type: int
+    initial_value: '0'
+
+spi:
+  id: display_qspi
+  type: quad
+  clk_pin: $PIN_LCD_SCK
+  data_pins:
+    - $PIN_LCD_SDA0
+    - $PIN_LCD_SDA1
+    - $PIN_LCD_SDA2
+    - $PIN_LCD_SDA3
+
+display:
+  - platform: qspi_dbi
+    id: main_display
+    model: CUSTOM
+    rotation: ${display_rotation}
+    data_rate: 80MHz
+    cs_pin: $PIN_LCD_CS
+    update_interval: 200ms
+    spi_id: display_qspi
+    color_order: rgb
+    dimensions:
+      height: 360
+      width: 360
+    invert_colors: true
+    reset_pin:
+      pca9554: pca9554_device
+      number: 2
+    auto_clear_enabled: true
+    init_sequence:
+      - [0xF0, 0x28]
+      - [0xF2, 0x28]
+      - [0x73, 0xF0]
+      - [0x7C, 0xD1]
+      - [0x83, 0xE0]
+      - [0x84, 0x61]
+      - [0xF2, 0x82]
+      - [0xF0, 0x00]
+      - [0xF0, 0x01]
+      - [0xF1, 0x01]
+      - [0xB0, 0x56]
+      - [0xB1, 0x4D]
+      - [0xB2, 0x24]
+      - [0xB4, 0x87]
+      - [0xB5, 0x44]
+      - [0xB6, 0x8B]
+      - [0xB7, 0x40]
+      - [0xB8, 0x86]
+      - [0xBA, 0x00]
+      - [0xBB, 0x08]
+      - [0xBC, 0x08]
+      - [0xBD, 0x00]
+      - [0xC0, 0x80]
+      - [0xC1, 0x10]
+      - [0xC2, 0x37]
+      - [0xC3, 0x80]
+      - [0xC4, 0x10]
+      - [0xC5, 0x37]
+      - [0xC6, 0xA9]
+      - [0xC7, 0x41]
+      - [0xC8, 0x01]
+      - [0xC9, 0xA9]
+      - [0xCA, 0x41]
+      - [0xCB, 0x01]
+      - [0xD0, 0x91]
+      - [0xD1, 0x68]
+      - [0xD2, 0x68]
+      - [0xF5, 0x00, 0xA5]
+      - [0xDD, 0x4F]
+      - [0xDE, 0x4F]
+      - [0xF1, 0x10]
+      - [0xF0, 0x00]
+      - [0xF0, 0x02]
+      - [0xE0, 0xF0, 0x0A, 0x10, 0x09, 0x09, 0x36, 0x35, 0x33, 0x4A, 0x29, 0x15, 0x15, 0x2E, 0x34]
+      - [0xE1, 0xF0, 0x0A, 0x0F, 0x08, 0x08, 0x05, 0x34, 0x33, 0x4A, 0x39, 0x15, 0x15, 0x2D, 0x33]
+      - [0xF0, 0x10]
+      - [0xF3, 0x10]
+      - [0xE0, 0x07]
+      - [0xE1, 0x00]
+      - [0xE2, 0x00]
+      - [0xE3, 0x00]
+      - [0xE4, 0xE0]
+      - [0xE5, 0x06]
+      - [0xE6, 0x21]
+      - [0xE7, 0x01]
+      - [0xE8, 0x05]
+      - [0xE9, 0x02]
+      - [0xEA, 0xDA]
+      - [0xEB, 0x00]
+      - [0xEC, 0x00]
+      - [0xED, 0x0F]
+      - [0xEE, 0x00]
+      - [0xEF, 0x00]
+      - [0xF8, 0x00]
+      - [0xF9, 0x00]
+      - [0xFA, 0x00]
+      - [0xFB, 0x00]
+      - [0xFC, 0x00]
+      - [0xFD, 0x00]
+      - [0xFE, 0x00]
+      - [0xFF, 0x00]
+      - [0x60, 0x40]
+      - [0x61, 0x04]
+      - [0x62, 0x00]
+      - [0x63, 0x42]
+      - [0x64, 0xD9]
+      - [0x65, 0x00]
+      - [0x66, 0x00]
+      - [0x67, 0x00]
+      - [0x68, 0x00]
+      - [0x69, 0x00]
+      - [0x6A, 0x00]
+      - [0x6B, 0x00]
+      - [0x70, 0x40]
+      - [0x71, 0x03]
+      - [0x72, 0x00]
+      - [0x73, 0x42]
+      - [0x74, 0xD8]
+      - [0x75, 0x00]
+      - [0x76, 0x00]
+      - [0x77, 0x00]
+      - [0x78, 0x00]
+      - [0x79, 0x00]
+      - [0x7A, 0x00]
+      - [0x7B, 0x00]
+      - [0x80, 0x48]
+      - [0x81, 0x00]
+      - [0x82, 0x06]
+      - [0x83, 0x02]
+      - [0x84, 0xD6]
+      - [0x85, 0x04]
+      - [0x86, 0x00]
+      - [0x87, 0x00]
+      - [0x88, 0x48]
+      - [0x89, 0x00]
+      - [0x8A, 0x08]
+      - [0x8B, 0x02]
+      - [0x8C, 0xD8]
+      - [0x8D, 0x04]
+      - [0x8E, 0x00]
+      - [0x8F, 0x00]
+      - [0x90, 0x48]
+      - [0x91, 0x00]
+      - [0x92, 0x0A]
+      - [0x93, 0x02]
+      - [0x94, 0xDA]
+      - [0x95, 0x04]
+      - [0x96, 0x00]
+      - [0x97, 0x00]
+      - [0x98, 0x48]
+      - [0x99, 0x00]
+      - [0x9A, 0x0C]
+      - [0x9B, 0x02]
+      - [0x9C, 0xDC]
+      - [0x9D, 0x04]
+      - [0x9E, 0x00]
+      - [0x9F, 0x00]
+      - [0xA0, 0x48]
+      - [0xA1, 0x00]
+      - [0xA2, 0x05]
+      - [0xA3, 0x02]
+      - [0xA4, 0xD5]
+      - [0xA5, 0x04]
+      - [0xA6, 0x00]
+      - [0xA7, 0x00]
+      - [0xA8, 0x48]
+      - [0xA9, 0x00]
+      - [0xAA, 0x07]
+      - [0xAB, 0x02]
+      - [0xAC, 0xD7]
+      - [0xAD, 0x04]
+      - [0xAE, 0x00]
+      - [0xAF, 0x00]
+      - [0xB0, 0x48]
+      - [0xB1, 0x00]
+      - [0xB2, 0x09]
+      - [0xB3, 0x02]
+      - [0xB4, 0xD9]
+      - [0xB5, 0x04]
+      - [0xB6, 0x00]
+      - [0xB7, 0x00]
+      - [0xB8, 0x48]
+      - [0xB9, 0x00]
+      - [0xBA, 0x0B]
+      - [0xBB, 0x02]
+      - [0xBC, 0xDB]
+      - [0xBD, 0x04]
+      - [0xBE, 0x00]
+      - [0xBF, 0x00]
+      - [0xC0, 0x10]
+      - [0xC1, 0x47]
+      - [0xC2, 0x56]
+      - [0xC3, 0x65]
+      - [0xC4, 0x74]
+      - [0xC5, 0x88]
+      - [0xC6, 0x99]
+      - [0xC7, 0x01]
+      - [0xC8, 0xBB]
+      - [0xC9, 0xAA]
+      - [0xD0, 0x10]
+      - [0xD1, 0x47]
+      - [0xD2, 0x56]
+      - [0xD3, 0x65]
+      - [0xD4, 0x74]
+      - [0xD5, 0x88]
+      - [0xD6, 0x99]
+      - [0xD7, 0x01]
+      - [0xD8, 0xBB]
+      - [0xD9, 0xAA]
+      - [0xF3, 0x01]
+      - [0xF0, 0x00]
+      - [0x3A, 0x55]
+      - [0x36, 0x00]
+      - [0x2A, 0x00, 0x00, 0x01, 0x67]
+      - [0x2B, 0x00, 0x00, 0x01, 0x67]
+      - [0x11, 0x00]
+      - delay 120ms
+      - [0x29, 0x00]
+      - delay 20ms
+    lambda: |-
+      const int W = 360, H = 360, M = W / 2;
+      const int VB_X = 40, VB_Y = 20, VB_W = 280, VB_H = 28;
+      const int CL_Y = 125;
+      const int WD_Y = 165;
+      const int DT_Y = 190;
+      const int R1_Y = 215, R1_H = 42;
+      const int R1_Y_IDLE = 260, R1_H_IDLE = 42;
+      const int SH_X = 25, SH_W = 130;
+      const int AL_X = 170, AL_W = 165;
+      const int R2_Y = 270, R2_H = 50;
+      const int PR_X = 20, PR_W = 95;
+      const int PL_X = 125, PL_W = 110;
+      const int NX_X = 245, NX_W = 95;
+
+      it.fill(C_BLACK);
+      auto t = id(esptime).now();
+      if (!t.is_valid()) {
+        it.print(M, CL_Y, id(font_time), TextAlign::CENTER, "--:--");
+        return;
+      }
+
+      std::string st = id(ha_player_state).state;
+      bool playing = (st == "playing");
+      bool music_mode = (playing || st == "paused");
+      float vol = id(ha_volume).get_state();
+      if (isnan(vol)) vol = 0.5f;
+
+      if (music_mode) {
+      it.filled_rectangle(VB_X, VB_Y, VB_W, VB_H, C_VOL_BG);
+      it.rectangle(VB_X, VB_Y, VB_W, VB_H, C_GRAY);
+      int fw = (int)(VB_W * vol + 0.5f);
+      if (fw > 0) {
+        Color vc;
+        if (vol < 0.33f) vc = C_GREEN;
+        else if (vol < 0.66f) vc = C_YELLOW;
+        else vc = C_RED;
+        it.filled_rectangle(VB_X, VB_Y, fw, VB_H, vc);
+      }
+      {
+        char lb[8];
+        snprintf(lb, sizeof(lb), "%d%%", (int)(vol * 100 + 0.5f));
+        it.print(VB_X + VB_W / 2, VB_Y + VB_H / 2, id(font_small), C_BLACK, TextAlign::CENTER, lb);
+      }
+      }
+      {
+        char lb[8];
+        snprintf(lb, sizeof(lb), "%d%%", (int)(vol * 100 + 0.5f));
+        it.print(VB_X + VB_W / 2, VB_Y + VB_H / 2, id(font_small), C_BLACK, TextAlign::CENTER, lb);
+      }
+
+      it.strftime(M, CL_Y, id(font_time), C_WHITE, TextAlign::CENTER, "%H:%M", t);
+
+      if (playing || st == "paused") {
+        std::string title = id(ha_title).state;
+        std::string artist = id(ha_artist).state;
+        std::string meta;
+        if (!artist.empty() && !title.empty())
+          meta = title + " - " + artist;
+        else if (!title.empty())
+          meta = title;
+        else if (!artist.empty())
+          meta = artist;
+
+        if (!meta.empty()) {
+          int max_chars = 28;
+          if ((int)meta.length() <= max_chars) {
+            it.print(M, DT_Y, id(font_date), C_WHITE, TextAlign::CENTER, meta.c_str());
+          } else if (playing) {
+            if (meta != id(last_meta)) {
+              id(last_meta) = meta;
+              id(marquee_offset) = 0;
+            }
+            id(marquee_offset) += 1;
+            std::string buf = meta + "     ";
+            int blen = buf.length();
+            int pos = id(marquee_offset) % blen;
+            std::string display;
+            if (pos + max_chars <= blen) {
+              display = buf.substr(pos, max_chars);
+            } else {
+              int first = blen - pos;
+              display = buf.substr(pos, first);
+              display.append(buf.substr(0, max_chars - first));
+            }
+            it.print(M, DT_Y, id(font_date), C_WHITE, TextAlign::CENTER, display.c_str());
+          } else {
+            it.print(M, DT_Y, id(font_date), C_DIM, TextAlign::CENTER, meta.c_str());
+          }
+        }
+      } else {
+        const char* wd[] = {"Sonntag", "Montag", "Dienstag", "Mittwoch",
+                            "Donnerstag", "Freitag", "Samstag"};
+        it.print(M, WD_Y, id(font_date), C_GRAY, TextAlign::CENTER, wd[t.day_of_week - 1]);
+        it.strftime(M, DT_Y, id(font_date), C_GRAY, TextAlign::CENTER, "%d.%m.%Y", t);
+        // Kalender-Termin
+        std::string cal = id(ha_cal).state;
+        if (!cal.empty() && cal != "—" && cal != "none" && cal != "unavailable") {
+          int cal_y = 218;
+          int cal_max = 34;
+          if ((int)cal.length() <= cal_max) {
+            it.print(M, cal_y, id(font_small), C_WHITE, TextAlign::CENTER, cal.c_str());
+          } else {
+            if (cal != id(last_meta)) {
+              id(last_meta) = cal;
+              id(marquee_offset) = 0;
+            }
+            id(marquee_offset) += 1;
+            std::string buf = cal + "     ";
+            int blen = buf.length();
+            int pos = id(marquee_offset) % blen;
+            std::string display;
+            if (pos + cal_max <= blen) {
+              display = buf.substr(pos, cal_max);
+            } else {
+              int first = blen - pos;
+              display = buf.substr(pos, first);
+              display.append(buf.substr(0, cal_max - first));
+            }
+            it.print(M, cal_y, id(font_small), C_WHITE, TextAlign::CENTER, display.c_str());
+          }
+        }
+      }
+
+      int r1y = music_mode ? R1_Y : R1_Y_IDLE;
+      int r1h = music_mode ? R1_H : R1_H_IDLE;
+
+      it.filled_rectangle(SH_X, r1y, SH_W, r1h, C_PURPLE);
+      it.rectangle(SH_X, r1y, SH_W, r1h, C_GRAY);
+      it.print(SH_X + SH_W / 2, r1y + r1h / 2, id(font_mdi), C_WHITE, TextAlign::CENTER, "\U000F0388");
+
+      if (!music_mode) {
+        bool alarm_on = id(alarm_switch).state;
+        Color abg = alarm_on ? C_GOLD : C_DIM;
+        Color afg = alarm_on ? C_BLACK : C_GRAY;
+        it.filled_rectangle(AL_X, r1y, AL_W, r1h, abg);
+        it.rectangle(AL_X, r1y, AL_W, r1h, C_GRAY);
+        int s = 22, bx = AL_X + 8, by = r1y + (r1h - s) / 2;
+        it.rectangle(bx, by, s, s, afg);
+        if (alarm_on) {
+          it.filled_rectangle(bx + 2, by + 2, s - 4, s - 4, C_GREEN);
+          it.line(bx + 4, by + s / 2, bx + s / 3, by + s - 5, C_WHITE);
+          it.line(bx + s / 3, by + s - 5, bx + s - 5, by + 5, C_WHITE);
+        }
+        it.print(AL_X + 56, r1y + r1h / 2, id(font_small), afg, TextAlign::CENTER, "Wecker");
+      }
+
+      if (music_mode) {
+
+      it.filled_rectangle(PR_X, R2_Y, PR_W, R2_H, C_MEDIA_BG);
+      it.rectangle(PR_X, R2_Y, PR_W, R2_H, C_DIM);
+      it.print(PR_X + PR_W / 2, R2_Y + R2_H / 2, id(font_button), C_WHITE, TextAlign::CENTER, "|<");
+
+      it.filled_rectangle(PL_X, R2_Y, PL_W, R2_H, C_BLUE);
+      it.rectangle(PL_X, R2_Y, PL_W, R2_H, C_DIM);
+      it.print(PL_X + PL_W / 2, R2_Y + R2_H / 2, id(font_button), C_WHITE, TextAlign::CENTER, playing ? "||" : ">");
+
+      it.filled_rectangle(NX_X, R2_Y, NX_W, R2_H, C_MEDIA_BG);
+      it.rectangle(NX_X, R2_Y, NX_W, R2_H, C_DIM);
+      it.print(NX_X + NX_W / 2, R2_Y + R2_H / 2, id(font_button), C_WHITE, TextAlign::CENTER, ">|");
+      }
+
+      // Touch-Feedback: kurz aufleuchten
+      if (id(flash_counter) > 0) {
+        it.filled_rectangle(id(flash_x), id(flash_y), id(flash_w), id(flash_h), C_DIM);
+        id(flash_counter)--;
+      }
+
+output:
+  - platform: ledc
+    pin: $PIN_LCD_BL
+    id: backlight_output
+
+light:
+  - platform: monochromatic
+    id: backlight
+    name: "Display Backlight"
+    output: backlight_output
+    restore_mode: RESTORE_DEFAULT_ON
+
+time:
+  - platform: homeassistant
+    id: esptime
+    on_time_sync:
+      then:
+        - component.update: main_display
+
+touchscreen:
+  - platform: cst816
+    id: touch
+    interrupt_pin:
+      number: $PIN_TOUCH_INT
+    reset_pin:
+      pca9554: pca9554_device
+      number: 0
+    i2c_id: bus_int
+    display: main_display
+    on_touch:
+      lambda: |-
+        int x = touch.y;
+        int y = 359 - touch.x;
+
+        if (y >= 20 && y <= 48 && x >= 28 && x <= 332) {
+          id(flash_x) = 28; id(flash_y) = 20; id(flash_w) = 304; id(flash_h) = 28;
+          id(flash_counter) = 2;
+          float cur = id(ha_volume).get_state();
+          if (isnan(cur)) cur = 0.5f;
+          float step;
+          if (cur <= 0.10f) step = 0.01f;
+          else if (cur <= 0.50f) step = 0.02f;
+          else step = 0.05f;
+          float nv = (x < 180) ? cur - step : cur + step;
+          if (nv < 0.0f) nv = 0.0f;
+          if (nv > 1.0f) nv = 1.0f;
+          id(target_volume) = nv;
+          id(script_set_volume).execute();
+        }
+        else if (y >= 215 && y <= 257) {
+          if (x >= 25 && x <= 155) {
+            id(flash_x) = 25; id(flash_y) = 215; id(flash_w) = 130; id(flash_h) = 42;
+            id(flash_counter) = 2;
+            std::string ps = id(ha_player_state).state;
+            if (ps == "playing" || ps == "paused")
+              id(script_stop_music).execute();
+            else
+              id(script_start_random).execute();
+          } else if (x >= 170 && x <= 335) {
+            id(flash_x) = 170; id(flash_y) = 215; id(flash_w) = 165; id(flash_h) = 42;
+            id(flash_counter) = 2;
+            id(alarm_switch).toggle();
+          }
+        }
+        else if (y >= 270 && y <= 320) {
+          if (x >= 125 && x <= 235) {
+            id(flash_x) = 125; id(flash_y) = 270; id(flash_w) = 110; id(flash_h) = 50;
+            id(flash_counter) = 2;
+            id(script_play_pause).execute();
+          } else if (x >= 20 && x <= 115) {
+            id(flash_x) = 20; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
+            id(flash_counter) = 2;
+            id(script_previous).execute();
+          } else if (x >= 245 && x <= 340) {
+            id(flash_x) = 245; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
+            id(flash_counter) = 2;
+            id(script_next).execute();
+          }
+        }
+        id(main_display).update();
+
+font:
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 300
+    id: font_time
+    size: 60
+
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 300
+    id: font_date
+    size: 22
+
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 300
+    id: font_small
+    size: 16
+
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 300
+    id: font_button
+    size: 28
+
+  - file: "assets/materialdesignicons.ttf"
+    id: font_mdi
+    size: 22
+    glyphs:
+      - "\U000F0388"   # music-note-eighth
+
+color:
+  - id: C_WHITE
+    hex: "FFFFFF"
+  - id: C_BLACK
+    hex: "000000"
+  - id: C_GREEN
+    hex: "33CC66"
+  - id: C_YELLOW
+    hex: "FFCC00"
+  - id: C_RED
+    hex: "FF4444"
+  - id: C_BLUE
+    hex: "3377FF"
+  - id: C_PURPLE
+    hex: "7733CC"
+  - id: C_GOLD
+    hex: "FFD700"
+  - id: C_GRAY
+    hex: "555555"
+  - id: C_DIM
+    hex: "2A2A2A"
+  - id: C_MEDIA_BG
+    hex: "1A2A3A"
+  - id: C_VOL_BG
+    hex: "1E1E1E"
+
+text_sensor:
+  - platform: homeassistant
+    entity_id: ${ha_target_player}
+    id: ha_player_state
+  - platform: homeassistant
+    entity_id: ${ha_target_player}
+    attribute: media_title
+    id: ha_title
+  - platform: homeassistant
+    entity_id: ${ha_target_player}
+    attribute: media_artist
+    id: ha_artist
+  - platform: homeassistant
+    entity_id: ${ha_calendar_sensor}
+    id: ha_cal
+
+sensor:
+  - platform: homeassistant
+    entity_id: ${ha_target_player}
+    attribute: volume_level
+    id: ha_volume
+
+number:
+  - platform: template
+    name: "Lautstärke"
+    icon: "mdi:volume-high"
+    min_value: 0
+    max_value: 1
+    step: 0.05
+    lambda: |-
+      return id(ha_volume).get_state();
+    set_action:
+      - homeassistant.service:
+          service: media_player.volume_set
+          data:
+            entity_id: ${ha_target_player}
+            volume_level: !lambda 'return x;'
+
+switch:
+  - platform: homeassistant
+    entity_id: ${ha_alarm_automation}
+    id: alarm_switch
+    name: "Wecker Alarm"
+    on_state:
+      then:
+        - component.update: main_display
+
+button:
+  - platform: template
+    name: "Zufallswiedergabe"
+    icon: "mdi:shuffle"
+    on_press:
+      - homeassistant.service:
+          service: ${ha_random_script}
+          data:
+            target_player: ${ha_target_player}
+  - platform: template
+    name: "Musik Stop"
+    icon: "mdi:stop"
+    on_press:
+      - homeassistant.service:
+          service: media_player.media_stop
+          data:
+            entity_id: ${ha_target_player}

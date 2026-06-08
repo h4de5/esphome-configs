@@ -1,0 +1,59 @@
+<<: !include base.yaml
+
+# see https://esphome.io/guides/configuration-types.html
+
+packages:
+  web_server: !include base-web_server.yaml
+  esphome: !include base-esphome.yaml
+  wifi: !include base-wifi.yaml
+  ota: !include base-ota.yaml
+  sensor: !include base-sensor.yaml
+  binary_sensor: !include base-binary_sensor.yaml
+  text_sensor: !include base-text_sensor.yaml
+  # bluetooth: !include empty.yaml
+  bluetooth: !include base-ble.yaml
+
+# see: https://www.amazon.de/dp/B0CP3YCP57?ref=ppx_yo2ov_dt_b_fed_asin_title
+# see: https://m.media-amazon.com/images/I/71T2U6heuAL._AC_SX679_.jpg
+# see: https://m.media-amazon.com/images/I/71DlpYBN8QL._AC_SL1500_.jpg
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_SPIRAM_USE: y
+      CONFIG_SPIRAM_USE_MALLOC: y
+      CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL: "16384"
+      CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP: y     
+      CONFIG_ESP32S3_SPIRAM_SUPPORT: y
+      CONFIG_SPIRAM_MEMTEST: n
+      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "8192"
+      # CONFIG_ESP_CONSOLE_USB_CDC: "y"
+  # platformio_options:
+  #   build_flags: "-DBOARD_HAS_PSRAM"
+
+# esphome:
+#   # name: esp32s3_test
+#   platformio_options:
+#     upload_protocol: esp32-s3-usb-otg
+
+psram:
+  mode: octal
+  # mode: quad
+  speed: 80MHz
+
+# logger:
+#   hardware_uart: USB_CDC
+
+status_led:
+  pin:
+    number: GPIO02
+    #inverted: True
+    inverted: False
+  id: led_blue
+
+
+
+

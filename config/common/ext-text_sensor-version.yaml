@@ -1,8 +1,23 @@
+# since v2026 undefined
+# platform: template
+# name: "Version"
+# icon: mdi:tag-outline
+# update_interval: never
+# # version is already taken internally
+# # id: version
+# lambda: |-
+#       // std::string v = id(build_version).state;
+#       std::string v = "${build_version}";
+#       return v.substr(0, v.find(' '));
+
+# will include config hash
+# platform: version
+# name: "Version"
+# hide_timestamp: true
+# icon: mdi:tag-outline
+
 platform: template
-name: "Version"
 icon: mdi:tag-outline
-# version is already taken internally
-# id: version
+name: "Version"
 lambda: |-
-      std::string v = id(build_version).state;
-      return v.substr(0, v.find(' '));
+      return std::string(ESPHOME_VERSION);
