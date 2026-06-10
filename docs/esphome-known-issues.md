@@ -182,3 +182,35 @@ Codepoints auf https://pictogrammers.com/library/mdi/ finden.
 Wenn der Benutzer bestätigt, dass das Gerät online ist (WLAN verbunden, läuft), aber der ESPHome Container via `/ping` `false` meldet und `/upload` (OTA) mit Exit 1 fehlschlägt:
 
 **Lösung:** Cold Start (Stecker ziehen, warten, wieder einstecken) – ein einfacher Reset (`STRG+R` / `restart` via API) reicht nicht. Erst nach einem vollständigen Stromzyklus meldet sich das Gerät wieder korrekt bei der Container-API an und OTA funktioniert.
+
+## Template Number/Text: `optimistic` + `lambda` inkompatibel
+
+Bei `number.template` und `text.template` können `optimistic: true` und ein `lambda` **nicht** gleichzeitig verwendet werden.
+
+```yaml
+# FALSCH – führt zu Compile-Fehler:
+number:
+  - platform: template
+    id: sleep_timer
+    optimistic: true
+    restore_value: true
+    initial_value: 60
+    lambda: |-           # <-- Fehler: optimistic + lambda
+      return id(sleep_timer).state;
+    set_action:
+      ...
+
+# RICHTIG – lambda weglassen, Wert wird intern gespeichert:
+number:
+  - platform: template
+    id: sleep_timer
+    optimistic: true
+    restore_value: true
+    initial_value: 60
+    set_action:
+      ...
+```
+
+- Mit `optimistic: true` + `restore_value: true` wird der Wert intern gespeichert und nach Neustart wiederhergestellt – ein `lambda` zum Lesen ist nicht nötig.
+- Gleiches gilt für `text.template`, `sensor.template` etc.
+- Fehlererkennung: `/json-config?configuration=...` gibt einen klaren Hinweis (`optimistic cannot be used with lambda`), `/compile` mit `only_generate` exit 2 = leer.

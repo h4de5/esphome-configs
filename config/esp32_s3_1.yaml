@@ -115,28 +115,28 @@ script:
       - homeassistant.service:
           service: media_player.media_play_pause
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
       - component.update: main_display
   - id: script_next
     then:
       - homeassistant.service:
           service: media_player.media_next_track
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
       - component.update: main_display
   - id: script_previous
     then:
       - homeassistant.service:
           service: media_player.media_previous_track
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
       - component.update: main_display
   - id: script_set_volume
     then:
       - homeassistant.service:
           service: media_player.volume_set
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
             volume_level: !lambda 'return id(target_volume);'
       - component.update: main_display
   - id: script_start_random
@@ -144,13 +144,13 @@ script:
       - homeassistant.service:
           service: ${ha_random_script}
           data:
-            target_player: ${ha_target_player}
+            target_player: !lambda 'return id(target_player_text).state;'
   - id: script_stop_music
     then:
       - homeassistant.service:
           service: media_player.media_stop
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
       - component.update: main_display
 
 globals:
@@ -178,6 +178,15 @@ globals:
   - id: flash_h
     type: int
     initial_value: '0'
+  - id: last_touch_time
+    type: uint32_t
+    initial_value: '0'
+  - id: prev_brightness
+    type: float
+    initial_value: '1.0'
+  - id: display_sleep
+    type: bool
+    initial_value: 'false'
 
 spi:
   id: display_qspi
@@ -561,7 +570,7 @@ display:
 
       // Touch-Feedback: kurz aufleuchten
       if (id(flash_counter) > 0) {
-        it.filled_rectangle(id(flash_x), id(flash_y), id(flash_w), id(flash_h), C_DIM);
+        it.rectangle(id(flash_x), id(flash_y), id(flash_w), id(flash_h), C_GREEN);
         id(flash_counter)--;
       }
 
@@ -596,12 +605,24 @@ touchscreen:
     display: main_display
     on_touch:
       lambda: |-
+        // Display-Sleep: Touch weckt auf, verarbeitet Touch dann normal
+        if (id(display_sleep)) {
+          id(display_sleep) = false;
+          auto call = id(backlight).turn_on();
+          if (id(prev_brightness) > 0.0f)
+            call.set_brightness(id(prev_brightness));
+          call.perform();
+          id(main_display).update();
+          return;
+        }
+        id(last_touch_time) = millis();
+
         int x = touch.y;
         int y = 359 - touch.x;
 
         if (y >= 20 && y <= 48 && x >= 28 && x <= 332) {
           id(flash_x) = 28; id(flash_y) = 20; id(flash_w) = 304; id(flash_h) = 28;
-          id(flash_counter) = 2;
+          id(flash_counter) = 4;
           float cur = id(ha_volume).get_state();
           if (isnan(cur)) cur = 0.5f;
           float step;
@@ -617,7 +638,7 @@ touchscreen:
         else if (y >= 215 && y <= 257) {
           if (x >= 25 && x <= 155) {
             id(flash_x) = 25; id(flash_y) = 215; id(flash_w) = 130; id(flash_h) = 42;
-            id(flash_counter) = 2;
+            id(flash_counter) = 4;
             std::string ps = id(ha_player_state).state;
             if (ps == "playing" || ps == "paused")
               id(script_stop_music).execute();
@@ -625,22 +646,22 @@ touchscreen:
               id(script_start_random).execute();
           } else if (x >= 170 && x <= 335) {
             id(flash_x) = 170; id(flash_y) = 215; id(flash_w) = 165; id(flash_h) = 42;
-            id(flash_counter) = 2;
+            id(flash_counter) = 4;
             id(alarm_switch).toggle();
           }
         }
         else if (y >= 270 && y <= 320) {
           if (x >= 125 && x <= 235) {
             id(flash_x) = 125; id(flash_y) = 270; id(flash_w) = 110; id(flash_h) = 50;
-            id(flash_counter) = 2;
+            id(flash_counter) = 4;
             id(script_play_pause).execute();
           } else if (x >= 20 && x <= 115) {
             id(flash_x) = 20; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
-            id(flash_counter) = 2;
+            id(flash_counter) = 4;
             id(script_previous).execute();
           } else if (x >= 245 && x <= 340) {
             id(flash_x) = 245; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
-            id(flash_counter) = 2;
+            id(flash_counter) = 4;
             id(script_next).execute();
           }
         }
@@ -742,8 +763,23 @@ number:
       - homeassistant.service:
           service: media_player.volume_set
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
             volume_level: !lambda 'return x;'
+  - platform: template
+    id: sleep_timer
+    name: "Display Sleep Timer"
+    icon: "mdi:sleep"
+    min_value: 0
+    max_value: 120
+    step: 5
+    unit_of_measurement: "min"
+    mode: slider
+    optimistic: true
+    restore_value: true
+    initial_value: 60
+    set_action:
+      then:
+        - component.update: main_display
 
 switch:
   - platform: homeassistant
@@ -762,7 +798,7 @@ button:
       - homeassistant.service:
           service: ${ha_random_script}
           data:
-            target_player: ${ha_target_player}
+            target_player: !lambda 'return id(target_player_text).state;'
   - platform: template
     name: "Musik Stop"
     icon: "mdi:stop"
@@ -770,4 +806,35 @@ button:
       - homeassistant.service:
           service: media_player.media_stop
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_player_text).state;'
+
+text:
+  - platform: template
+    name: "Ziel-Lautsprecher"
+    id: target_player_text
+    icon: "mdi:speaker"
+    mode: TEXT
+    optimistic: true
+    restore_value: true
+    initial_value: "${ha_target_player}"
+    set_action:
+      then:
+        - component.update: main_display
+
+interval:
+  - interval: 15s
+    then:
+      - lambda: |-
+          if (id(sleep_timer).state <= 0) return;
+          if (id(display_sleep)) return;
+          std::string st = id(ha_player_state).state;
+          if (st == "playing" || st == "paused") return;
+          if (!id(backlight).current_values.is_on()) return;
+          uint32_t now = millis();
+          if (now - id(last_touch_time) >= (uint32_t)(id(sleep_timer).state * 60000u)) {
+            id(prev_brightness) = id(backlight).current_values.get_brightness();
+            auto call = id(backlight).turn_off();
+            call.perform();
+            id(display_sleep) = true;
+            id(main_display).update();
+          }

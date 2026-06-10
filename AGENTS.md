@@ -7,54 +7,128 @@ ESPHome Konfigurationsverzeichnis für das Heimnetzwerk (192.168.0.0/24).
 ## Agent-Workflow
 
 - YAML-Konfigurationen lesen/bearbeiten
-- Configs via WebSocket API compilieren (nur `only_generate` / Validierung)
-- Validierung auch via `/json-config?configuration=<file>` (HTTP GET) möglich – liefert geparstes JSON oder Error
+- **Validierung** via `/json-config?configuration=<file>` (HTTP GET) – prüft NUR YAML-Syntax, keine C++ Lambda-Fehler!
+- **Compile** via WebSocket `/compile` (full, ohne `only_generate`) – prüft YAML + C++ Lambda → exit 0 = alles OK
+- **OTA Upload** via WebSocket `/upload` – nur Flashen, getrennt nach erfolgreichem Compile
+- **Pflicht-Reihenfolge:**
+  1. `compile` (full build, OHNE `only_generate`) → exit 0 abwarten
+  2. `upload` (OTA flashen) → exit 0 abwarten
+- `/run` (Compile + OTA in einem) vermeiden – getrennte Schritte geben klare Fehlerausgaben
+- `/json-config` liefert detailliertere YAML-Fehler als `/compile` mit `only_generate`
 - Status abfragen (online/offline via `/ping`)
 - Änderungen an Configs nur nach Absprache mit User
 - Keine Änderungen an `common/`-Dateien ohne explizite Aufforderung
 
-## Compile via WebSocket API
+## Deploy-Workflow (Python)
 
 ESPHome Container: `http://192.168.0.6:6052/`
 
+### Schritt 1: Full Compile (YAML + C++ Lambda testen)
+
 ```python
 import json, websocket
-
 ws = websocket.create_connection(
     'ws://192.168.0.6:6052/compile',
-    timeout=300,
+    timeout=600,
     suppress_origin=True  # Wichtig! sonst 403
 )
 ws.send(json.dumps({
     'type': 'spawn',
     'configuration': 'esp32_s3_1.yaml',
-    # 'only_generate': True  # nur validieren
+    # KEIN only_generate – full build!
 }))
 while True:
     msg = ws.recv()
     data = json.loads(msg)
     if data.get('event') == 'line':
-        print(data.get('message', ''))
+        line = data.get('message', '')
+        if line.strip():
+            print(line)  # Fehler sichtbar machen
     elif data.get('event') == 'exit':
         print(f'Exit: {data.get("code")}')
         break
 ws.close()
 ```
 
+### Schritt 2: OTA Upload (nur nach exit 0 von Schritt 1)
+
+```python
+import json, websocket
+ws = websocket.create_connection(
+    'ws://192.168.0.6:6052/upload',
+    timeout=600,
+    suppress_origin=True
+)
+ws.send(json.dumps({
+    'type': 'spawn',
+    'configuration': 'esp32_s3_1.yaml',
+    'port': 'OTA'
+}))
+while True:
+    msg = ws.recv()
+    data = json.loads(msg)
+    if data.get('event') == 'line':
+        line = data.get('message', '')
+        if line.strip():
+            print(line)
+    elif data.get('event') == 'exit':
+        print(f'Exit: {data.get("code")}')
+        break
+ws.close()
+```
+
+### Schnell-Variante (beide Schritte in einem Skript)
+
+```python
+import json, websocket
+for ep in ['compile', 'upload']:
+    ws = websocket.create_connection(
+        f'ws://192.168.0.6:6052/{ep}',
+        timeout=600,
+        suppress_origin=True
+    )
+    d = {'type': 'spawn', 'configuration': 'esp32_s3_1.yaml'}
+    if ep == 'upload':
+        d['port'] = 'OTA'
+    ws.send(json.dumps(d))
+    while True:
+        msg = ws.recv()
+        data = json.loads(msg)
+        if data.get('event') == 'line':
+            line = data.get('message', '')
+            if line.strip():
+                print(f'[{ep}] {line}')
+        elif data.get('event') == 'exit':
+            print(f'[{ep}] Exit: {data.get("code")}')
+            if data.get('code') != 0:
+                print(f'{ep.upper()} FEHLGESCHLAGEN – Abbruch')
+                exit(1)
+            break
+    ws.close()
+```
+
 ## API Endpoints
 
-| Endpoint                            | Methode | Beschreibung                           |
-| ----------------------------------- | ------- | -------------------------------------- |
-| `/ping`                             | GET     | Online-Status (ICMP)                   |
-| `/info?configuration=<file>`        | GET     | Config Metadaten                       |
-| `/json-config?configuration=<file>` | GET     | Geparste Config als JSON               |
-| `/edit?configuration=<file>`        | GET     | Config-Inhalt abrufen                  |
-| `/edit?configuration=<file>`        | POST    | Config speichern                       |
-| `/delete?configuration=<file>`      | POST    | Config löschen                         |
-| `/downloads?configuration=<file>`   | GET     | Firmware Download                      |
-| `/compile`                          | WS      | Compile WebSocket                      |
-| `/upload`                           | WS      | OTA-Update (nur flashen, ohne compile) |
-| `/run`                              | WS      | Compile + OTA + Logs am Stück          |
+| Endpoint                            | Methode | Beschreibung                                    |
+| ----------------------------------- | ------- | ----------------------------------------------- |
+| `/ping`                             | GET     | Online-Status (ICMP)                            |
+| `/info?configuration=<file>`        | GET     | Config Metadaten                                |
+| `/json-config?configuration=<file>` | GET     | Geparste Config als JSON (nur YAML-Prüfung!)    |
+| `/edit?configuration=<file>`        | GET     | Config-Inhalt abrufen                           |
+| `/edit?configuration=<file>`        | POST    | Config speichern                                |
+| `/delete?configuration=<file>`      | POST    | Config löschen                                  |
+| `/downloads?configuration=<file>`   | GET     | Firmware Download                               |
+| `/compile`                          | WS      | Compile (mit `only_generate` = nur YAML-Check)  |
+| `/upload`                           | WS      | OTA-Flash (kein Compile – vorher build nötig!)  |
+| `/run`                              | WS      | Compile + OTA + Logs (nicht empfohlen, wenige Fehlerausgaben) |
+
+## Wichtige Regeln fürs Deployen
+
+1. **Immer erst `compile` (full), dann `upload`** – nie nur `/upload` allein
+2. **Niemals `only_generate: True` für den finalen Build** – das prüft nur YAML, nicht C++
+3. **`compile`-Ausgaben vollständig lesen** – C++-Fehler erscheinen in den `line`-Events
+4. **Exit 0 ≠ garantiert funktionsfähig** – zur Sicherheit nach OTA das WebUI prüfen
+5. **Gerät offline?** → Cold Start (Stecker ziehen, warten, einstecken) – normaler Reset reicht oft nicht
 
 ## Path-Mapping
 
@@ -76,7 +150,7 @@ Container `/config/` = Host `/workspace/development/docker-esphome/config/`
 | `esp32_8.yaml`    | Büro               | e-Ink 7.3" (ESP32-S3, ESP-IDF)                 |
 | `esp32_9.yaml`    | Büro               | Uhr/Mikro/Lautsprecher/Voice                   |
 | `esp32_10.yaml`   | Büro               | e-Ink 7.3" Online-Image (ESP32-S3)             |
-| `esp32_s3_1.yaml` | -                  | **Sendspin Radio + Display** (Waveshare 1.85C) |
+| `esp32_s3_1.yaml` | -                  | **Sendspin Radio + Display** (Waveshare 1.85C), steuert externen Player `media_player.david_lautsprecher` |
 
 ### Gosund SP111 (ESP8285)
 

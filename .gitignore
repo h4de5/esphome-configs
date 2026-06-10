@@ -12,3 +12,10 @@
 config/.gitignore
 wo-is-der-mist.txt
 **/@eaDir
+config/common.bac-2025-05-16/
+/config/esp32_panlab.yaml
+/config/.platformio/config/.pip/
+config/.pip/
+
+config/.platformio/
+
