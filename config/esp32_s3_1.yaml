@@ -55,7 +55,27 @@ substitutions:
   # Backlight PWM
   PIN_LCD_BL_PWM: GPIO5
 
+external_components:
+  - source:
+      type: local
+      path: components
+
 <<: !include common/esp32-s3.yaml
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+  homeassistant_states: true
+
+esphome:
+  name: $devicename
+  comment: $devicecomment
+  on_boot:
+    then:
+      - lambda: |-
+          auto call = id(backlight).turn_on();
+          call.set_brightness(id(stored_brightness));
+          call.perform();
 
 # Status-LED auf GPIO19 (unused, kein physischer Pin) – deaktiviert die blaue LED auf GPIO2
 status_led:
@@ -113,28 +133,28 @@ script:
       - homeassistant.service:
           service: media_player.media_play_pause
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
       - component.update: main_display
   - id: script_next
     then:
       - homeassistant.service:
           service: media_player.media_next_track
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
       - component.update: main_display
   - id: script_previous
     then:
       - homeassistant.service:
           service: media_player.media_previous_track
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
       - component.update: main_display
   - id: script_set_volume
     then:
       - homeassistant.service:
           service: media_player.volume_set
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
             volume_level: !lambda 'return id(target_volume);'
       - component.update: main_display
   - id: script_start_random
@@ -142,13 +162,13 @@ script:
       - homeassistant.service:
           service: ${ha_random_script}
           data:
-            target_player: ${ha_target_player}
+            target_player: !lambda 'return id(target_playername).state;'
   - id: script_stop_music
     then:
       - homeassistant.service:
           service: media_player.media_stop
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
       - component.update: main_display
 
 globals:
@@ -180,9 +200,10 @@ globals:
   - id: last_touch_time
     type: uint32_t
     initial_value: '0'
-  - id: prev_brightness
+  - id: stored_brightness
     type: float
-    initial_value: '1.0'
+    initial_value: '0.5'
+    restore_value: true
   - id: display_sleep
     type: bool
     initial_value: 'false'
@@ -427,11 +448,10 @@ display:
         return;
       }
 
-      std::string st = id(ha_player_state).state;
+      std::string st = id(media_cache)->get("", "unbekannt");
       bool playing = (st == "playing");
       bool music_mode = (playing || st == "paused");
-      float vol = id(ha_volume).get_state();
-      if (isnan(vol)) vol = 0.5f;
+      float vol = atof(id(media_cache)->get("volume_level", "0.5").c_str());
 
       if (music_mode) {
       it.filled_rectangle(VB_X, VB_Y, VB_W, VB_H, C_VOL_BG);
@@ -458,9 +478,9 @@ display:
 
       it.strftime(M, CL_Y, id(font_time), C_WHITE, TextAlign::CENTER, "%H:%M", t);
 
-      if (playing || st == "paused") {
-        std::string title = id(ha_title).state;
-        std::string artist = id(ha_artist).state;
+      if (music_mode) {
+        std::string title = id(media_cache)->get("media_title", "");
+        std::string artist = id(media_cache)->get("media_artist", "");
         std::string meta;
         if (!artist.empty() && !title.empty())
           meta = title + " - " + artist;
@@ -584,6 +604,10 @@ light:
     name: "Display Backlight"
     output: backlight_output
     restore_mode: ALWAYS_ON
+    on_state:
+      then:
+        - lambda: |-
+            id(stored_brightness) = id(backlight).current_values.get_brightness();
 
 time:
   - platform: homeassistant
@@ -610,8 +634,7 @@ touchscreen:
           id(display_sleep) = false;
           id(last_touch_time) = millis();
           auto call = id(backlight).turn_on();
-          if (id(prev_brightness) > 0.0f)
-            call.set_brightness(id(prev_brightness));
+          call.set_brightness(id(stored_brightness));
           call.perform();
           id(main_display).update();
           return;
@@ -622,12 +645,11 @@ touchscreen:
         int y = 359 - touch.x;
 
         if (y >= 20 && y <= 48 && x >= 28 && x <= 332) {
-          std::string _vol_st = id(ha_player_state).state;
+          std::string _vol_st = id(media_cache)->get("", "unbekannt");
           if (_vol_st == "playing" || _vol_st == "paused") {
             id(flash_x) = 28; id(flash_y) = 20; id(flash_w) = 304; id(flash_h) = 28;
             id(flash_counter) = 1;
-            float cur = id(ha_volume).get_state();
-            if (isnan(cur)) cur = 0.5f;
+            float cur = atof(id(media_cache)->get("volume_level", "0.5").c_str());
             float step;
             if (cur <= 0.10f) step = 0.01f;
             else if (cur <= 0.50f) step = 0.02f;
@@ -643,7 +665,7 @@ touchscreen:
           if (x >= 25 && x <= 155) {
             id(flash_x) = 25; id(flash_y) = 215; id(flash_w) = 130; id(flash_h) = 42;
             id(flash_counter) = 1;
-            std::string ps = id(ha_player_state).state;
+            std::string ps = id(media_cache)->get("", "unbekannt");
             if (ps == "playing" || ps == "paused")
               id(script_stop_music).execute();
             else
@@ -654,9 +676,9 @@ touchscreen:
             id(alarm_switch).toggle();
           }
         }
-        // Transport controls (music mode) / Shuffle+Alarm (idle mode) – y=260..302
-        else if (y >= 260 && y <= 302) {
-          std::string _ms = id(ha_player_state).state;
+        // Transport controls (music mode) / Shuffle+Alarm (idle mode) – y=260..320
+        else if (y >= 260 && y <= 320) {
+          std::string _ms = id(media_cache)->get("", "unbekannt");
           if (_ms == "playing" || _ms == "paused") {
             // Music mode: transport controls
             if (x >= 125 && x <= 235) {
@@ -749,25 +771,26 @@ color:
 
 text_sensor:
   - platform: homeassistant
-    entity_id: ${ha_target_player}
-    id: ha_player_state
-  - platform: homeassistant
-    entity_id: ${ha_target_player}
-    attribute: media_title
-    id: ha_title
-  - platform: homeassistant
-    entity_id: ${ha_target_player}
-    attribute: media_artist
-    id: ha_artist
-  - platform: homeassistant
     entity_id: ${ha_calendar_sensor}
     id: ha_cal
 
-sensor:
-  - platform: homeassistant
-    entity_id: ${ha_target_player}
-    attribute: volume_level
-    id: ha_volume
+text:
+  - platform: template
+    name: "Ziel Media Player"
+    id: target_playername
+    optimistic: true
+    restore_value: true
+    mode: text
+    initial_value: "${ha_target_player}"
+
+ha_entity_cache:
+  id: media_cache
+  target_text: target_playername
+  attributes:
+    - ""               # roher Entity-State (playing/paused/idle/off)
+    - "media_title"
+    - "media_artist"
+    - "volume_level"
 
 number:
   - platform: template
@@ -777,13 +800,14 @@ number:
     max_value: 1
     step: 0.05
     lambda: |-
-      return id(ha_volume).get_state();
+      return atof(id(media_cache)->get("volume_level", "0.5").c_str());
     set_action:
       - homeassistant.service:
           service: media_player.volume_set
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
             volume_level: !lambda 'return x;'
+
   - platform: template
     id: sleep_timer
     name: "Display Sleep Timer"
@@ -809,7 +833,13 @@ switch:
       then:
         - component.update: main_display
 
+# ── ha_entity_cache aktiv (Player-Daten via media_cache->get(...)) ──
+
 button:
+  - platform: restart
+    name: "Restart"
+    icon: "mdi:restart"
+    device_class: "restart"
   - platform: template
     name: "Start Music"
     icon: "mdi:shuffle"
@@ -817,7 +847,7 @@ button:
       - homeassistant.service:
           service: ${ha_random_script}
           data:
-            target_player: ${ha_target_player}
+            target_player: !lambda 'return id(target_playername).state;'
   - platform: template
     name: "Stop"
     icon: "mdi:stop"
@@ -825,7 +855,7 @@ button:
       - homeassistant.service:
           service: media_player.media_stop
           data:
-            entity_id: ${ha_target_player}
+            entity_id: !lambda 'return id(target_playername).state;'
 
 interval:
   - interval: 15s
@@ -833,12 +863,12 @@ interval:
       - lambda: |-
           if (id(sleep_timer).state <= 0) return;
           if (id(display_sleep)) return;
-          std::string st = id(ha_player_state).state;
+          std::string st = id(media_cache)->get("", "unbekannt");
           if (st == "playing" || st == "paused") return;
           if (!id(backlight).current_values.is_on()) return;
           uint32_t now = millis();
           if (now - id(last_touch_time) >= (uint32_t)(id(sleep_timer).state * 60000u)) {
-            id(prev_brightness) = id(backlight).current_values.get_brightness();
+            id(stored_brightness) = id(backlight).current_values.get_brightness();
             auto call = id(backlight).turn_off();
             call.perform();
             id(display_sleep) = true;
