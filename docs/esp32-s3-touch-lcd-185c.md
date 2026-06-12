@@ -167,6 +167,12 @@ touchscreen:
 7. **`invert_colors: true`** notwendig für korrekte Farbdarstellung.
 8. **`qspi_dbi`** ist deprecated in 2026.5.3, ersetzt durch `mipi_spi`.
 9. **Bluetooth deaktivieren** falls nicht benötigt (spart Speicher).
+10. **CST816S Standby**: Der Touch-Controller geht nach ~2s Inaktivität in Standby. `skip_probe: true` verhindert Setup-Failures.
+    - **ACHTUNG – I2C Write kann Display zerstören**: Das Deaktivieren des Autosleep per `on_boot`-Lambda via `bus_int->write(0x15, ...)` kann nach OTA-Flash dazu führen, dass das Display komplett schwarz bleibt. Grund vermutlich I2C-Bus-Timing während Boot, das die Display-Initialisierung stört. Daher: **Kein I2C-Write an CST816S im `on_boot`** – lieber den ~100-300ms Wake-up auf ersten Touch in Kauf nehmen.
+    - `skip_probe: true` allein ist ausreichend für stabilen Boot.
+11. **I2C Bus write im on_boot Lambda**: `IDFI2CBus` hat kein `write_byte()` / `write_bytes()`. Stattdessen `bus_int->write(address, buffer, len)` mit kombiniertem Register+Value-Buffer.
+    - **GEFAHR**: Diese Methode kann bei CST816S Adresse 0x15 das Display zum Absturz bringen (s. Punkt 10). Verwendung vermeiden.
+12. **Display-Update im Touch-Handler**: Früher wurde `id(main_display).update()` aus `on_touch` entfernt, um schnelle Taps nicht zu blockieren. Nach Revert (Display war blank nach `on_boot`-Lambda) ist `id(main_display).update()` wieder im `on_touch` enthalten. Der Trade-Off: Touch-Responsiveness vs. Display-Sichtbarkeit – aktuell priorisieren wir sichtbares Display.
 
 ## Display Lambda Round-Layout
 
@@ -182,6 +188,29 @@ y:285     → Transport (|<  >/||  >|)
 ```
 
 Touch-Zonen sind entsprechend definiert – `id(main_display).update()` nach jeder Aktion.
+
+## Naming Convention
+
+Device `esp32_s3_1`, friendly name in HA per user gesetzt. Alle HA Entities folgen `{domain}.esp32_s3_1_{name}`:
+
+| `name:` | HA Entity | Beschreibung |
+|---|---|---|
+| `"Target Playername"` | `text.esp32_s3_1_target_playername` | Ziel-Player (Entity-ID) |
+| `"Player State"` | `text.esp32_s3_1_player_state` | State des Ziel-Players |
+| `"Title"` | `text.esp32_s3_1_title` | Media Title |
+| `"Artist"` | `text.esp32_s3_1_artist` | Media Artist |
+| `"Volume"` | `sensor.esp32_s3_1_volume` | Volume Level |
+| `"Player"` | `media_player.esp32_s3_1_player` | Sendspin Player |
+| `"Speaker"` | `media_player.esp32_s3_1_speaker` | Lokaler Speaker |
+| `"Display Backlight"` | `light.esp32_s3_1_display_backlight` | Backlight |
+| `"Volume"` | `number.esp32_s3_1_volume` | Lautstärke-Regler |
+| `"Display Sleep Timer"` | `number.esp32_s3_1_display_sleep_timer` | Sleep Timer |
+| `"Alarm"` | `switch.esp32_s3_1_alarm` | Wecker Automation |
+| `"Start Music"` | `button.esp32_s3_1_start_music` | Zufallswiedergabe |
+| `"Stop"` | `button.esp32_s3_1_stop` | Musik Stop |
+| `"Restart"` | `button.esp32_s3_1_restart` | Restart |
+
+Gleiches Schema für `esp32_s3_2` etc.
 
 ## Referenzen
 

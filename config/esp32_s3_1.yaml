@@ -63,8 +63,6 @@ status_led:
     number: GPIO19
     inverted: False
 
-esphome:
-  friendly_name: "David Wecker"
 
 i2c:
   sda: $PIN_I2C_SDA
@@ -97,7 +95,7 @@ media_source:
 
 media_player:
   - platform: speaker_source
-    name: "David Wecker"
+    name: "Player"
     id: sendspin_player
     media_pipeline:
       speaker: speaker_id
@@ -105,7 +103,7 @@ media_player:
         - sendspin_source
   - platform: speaker
     id: local_media_player
-    name: "David Wecker Lautsprecher"
+    name: "Speaker"
     announcement_pipeline:
       speaker: speaker_id
 
@@ -115,28 +113,28 @@ script:
       - homeassistant.service:
           service: media_player.media_play_pause
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
+            entity_id: ${ha_target_player}
       - component.update: main_display
   - id: script_next
     then:
       - homeassistant.service:
           service: media_player.media_next_track
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
+            entity_id: ${ha_target_player}
       - component.update: main_display
   - id: script_previous
     then:
       - homeassistant.service:
           service: media_player.media_previous_track
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
+            entity_id: ${ha_target_player}
       - component.update: main_display
   - id: script_set_volume
     then:
       - homeassistant.service:
           service: media_player.volume_set
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
+            entity_id: ${ha_target_player}
             volume_level: !lambda 'return id(target_volume);'
       - component.update: main_display
   - id: script_start_random
@@ -144,13 +142,13 @@ script:
       - homeassistant.service:
           service: ${ha_random_script}
           data:
-            target_player: !lambda 'return id(target_player_text).state;'
+            target_player: ${ha_target_player}
   - id: script_stop_music
     then:
       - homeassistant.service:
           service: media_player.media_stop
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
+            entity_id: ${ha_target_player}
       - component.update: main_display
 
 globals:
@@ -163,6 +161,7 @@ globals:
   - id: target_volume
     type: float
     initial_value: '0.5'
+    restore_value: true
   - id: flash_counter
     type: int
     initial_value: '0'
@@ -584,7 +583,7 @@ light:
     id: backlight
     name: "Display Backlight"
     output: backlight_output
-    restore_mode: RESTORE_DEFAULT_ON
+    restore_mode: ALWAYS_ON
 
 time:
   - platform: homeassistant
@@ -602,12 +601,14 @@ touchscreen:
       pca9554: pca9554_device
       number: 0
     i2c_id: bus_int
+    skip_probe: true
     display: main_display
     on_touch:
       lambda: |-
         // Display-Sleep: Touch weckt auf, verarbeitet Touch dann normal
         if (id(display_sleep)) {
           id(display_sleep) = false;
+          id(last_touch_time) = millis();
           auto call = id(backlight).turn_on();
           if (id(prev_brightness) > 0.0f)
             call.set_brightness(id(prev_brightness));
@@ -621,24 +622,27 @@ touchscreen:
         int y = 359 - touch.x;
 
         if (y >= 20 && y <= 48 && x >= 28 && x <= 332) {
-          id(flash_x) = 28; id(flash_y) = 20; id(flash_w) = 304; id(flash_h) = 28;
-          id(flash_counter) = 4;
-          float cur = id(ha_volume).get_state();
-          if (isnan(cur)) cur = 0.5f;
-          float step;
-          if (cur <= 0.10f) step = 0.01f;
-          else if (cur <= 0.50f) step = 0.02f;
-          else step = 0.05f;
-          float nv = (x < 180) ? cur - step : cur + step;
-          if (nv < 0.0f) nv = 0.0f;
-          if (nv > 1.0f) nv = 1.0f;
-          id(target_volume) = nv;
-          id(script_set_volume).execute();
+          std::string _vol_st = id(ha_player_state).state;
+          if (_vol_st == "playing" || _vol_st == "paused") {
+            id(flash_x) = 28; id(flash_y) = 20; id(flash_w) = 304; id(flash_h) = 28;
+            id(flash_counter) = 1;
+            float cur = id(ha_volume).get_state();
+            if (isnan(cur)) cur = 0.5f;
+            float step;
+            if (cur <= 0.10f) step = 0.01f;
+            else if (cur <= 0.50f) step = 0.02f;
+            else step = 0.05f;
+            float nv = (x < 180) ? cur - step : cur + step;
+            if (nv < 0.0f) nv = 0.0f;
+            if (nv > 1.0f) nv = 1.0f;
+            id(target_volume) = nv;
+            id(script_set_volume).execute();
+          }
         }
         else if (y >= 215 && y <= 257) {
           if (x >= 25 && x <= 155) {
             id(flash_x) = 25; id(flash_y) = 215; id(flash_w) = 130; id(flash_h) = 42;
-            id(flash_counter) = 4;
+            id(flash_counter) = 1;
             std::string ps = id(ha_player_state).state;
             if (ps == "playing" || ps == "paused")
               id(script_stop_music).execute();
@@ -646,26 +650,41 @@ touchscreen:
               id(script_start_random).execute();
           } else if (x >= 170 && x <= 335) {
             id(flash_x) = 170; id(flash_y) = 215; id(flash_w) = 165; id(flash_h) = 42;
-            id(flash_counter) = 4;
+            id(flash_counter) = 1;
             id(alarm_switch).toggle();
           }
         }
-        else if (y >= 270 && y <= 320) {
-          if (x >= 125 && x <= 235) {
-            id(flash_x) = 125; id(flash_y) = 270; id(flash_w) = 110; id(flash_h) = 50;
-            id(flash_counter) = 4;
-            id(script_play_pause).execute();
-          } else if (x >= 20 && x <= 115) {
-            id(flash_x) = 20; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
-            id(flash_counter) = 4;
-            id(script_previous).execute();
-          } else if (x >= 245 && x <= 340) {
-            id(flash_x) = 245; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
-            id(flash_counter) = 4;
-            id(script_next).execute();
+        // Transport controls (music mode) / Shuffle+Alarm (idle mode) – y=260..302
+        else if (y >= 260 && y <= 302) {
+          std::string _ms = id(ha_player_state).state;
+          if (_ms == "playing" || _ms == "paused") {
+            // Music mode: transport controls
+            if (x >= 125 && x <= 235) {
+              id(flash_x) = 125; id(flash_y) = 270; id(flash_w) = 110; id(flash_h) = 50;
+              id(flash_counter) = 1;
+              id(script_play_pause).execute();
+            } else if (x >= 20 && x <= 115) {
+              id(flash_x) = 20; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
+              id(flash_counter) = 1;
+              id(script_previous).execute();
+            } else if (x >= 245 && x <= 340) {
+              id(flash_x) = 245; id(flash_y) = 270; id(flash_w) = 95; id(flash_h) = 50;
+              id(flash_counter) = 1;
+              id(script_next).execute();
+            }
+          } else {
+            // Idle mode: shuffle + alarm
+            if (x >= 25 && x <= 155) {
+              id(flash_x) = 25; id(flash_y) = 260; id(flash_w) = 130; id(flash_h) = 42;
+              id(flash_counter) = 1;
+              id(script_start_random).execute();
+            } else if (x >= 170 && x <= 335) {
+              id(flash_x) = 170; id(flash_y) = 260; id(flash_w) = 165; id(flash_h) = 42;
+              id(flash_counter) = 1;
+              id(alarm_switch).toggle();
+            }
           }
         }
-        id(main_display).update();
 
 font:
   - file:
@@ -752,7 +771,7 @@ sensor:
 
 number:
   - platform: template
-    name: "Lautstärke"
+    name: "Volume"
     icon: "mdi:volume-high"
     min_value: 0
     max_value: 1
@@ -763,7 +782,7 @@ number:
       - homeassistant.service:
           service: media_player.volume_set
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
+            entity_id: ${ha_target_player}
             volume_level: !lambda 'return x;'
   - platform: template
     id: sleep_timer
@@ -785,41 +804,28 @@ switch:
   - platform: homeassistant
     entity_id: ${ha_alarm_automation}
     id: alarm_switch
-    name: "Wecker Alarm"
+    name: "Alarm"
     on_state:
       then:
         - component.update: main_display
 
 button:
   - platform: template
-    name: "Zufallswiedergabe"
+    name: "Start Music"
     icon: "mdi:shuffle"
     on_press:
       - homeassistant.service:
           service: ${ha_random_script}
           data:
-            target_player: !lambda 'return id(target_player_text).state;'
+            target_player: ${ha_target_player}
   - platform: template
-    name: "Musik Stop"
+    name: "Stop"
     icon: "mdi:stop"
     on_press:
       - homeassistant.service:
           service: media_player.media_stop
           data:
-            entity_id: !lambda 'return id(target_player_text).state;'
-
-text:
-  - platform: template
-    name: "Ziel-Lautsprecher"
-    id: target_player_text
-    icon: "mdi:speaker"
-    mode: TEXT
-    optimistic: true
-    restore_value: true
-    initial_value: "${ha_target_player}"
-    set_action:
-      then:
-        - component.update: main_display
+            entity_id: ${ha_target_player}
 
 interval:
   - interval: 15s

@@ -183,6 +183,65 @@ Wenn der Benutzer bestätigt, dass das Gerät online ist (WLAN verbunden, läuft
 
 **Lösung:** Cold Start (Stecker ziehen, warten, wieder einstecken) – ein einfacher Reset (`STRG+R` / `restart` via API) reicht nicht. Erst nach einem vollständigen Stromzyklus meldet sich das Gerät wieder korrekt bei der Container-API an und OTA funktioniert.
 
+## I2C Bus API: `on_boot` Lambda schreiben
+
+`IDFI2CBus` (`bus_int`) hat **kein `write_byte()` / `write_bytes()`** – die gibt es nur auf `I2CDevice`.
+
+Für register-basierte I2C-Writes im Lambda (`on_boot`, etc.) muss `write(address, buffer, len)` mit kombiniertem Register+Value-Buffer verwendet werden:
+
+```cpp
+const uint8_t regval[] = {0xFE, 0xFF};  // [register, value]
+bus_int->write(0x15, regval, 2);
+```
+
+Das `only_generate` erkennt diesen Fehler nicht – der C++ Code wird syntaktisch korrekt generiert, scheitert aber beim eigentlichen Compile (exit 1, leere Ausgabe).
+
+**WARNUNG:** Auch ein korrekter I2C-Write auf den CST816S Touchcontroller (Adresse 0x15) im `on_boot`-Lambda kann das Display zum Absturz bringen (Blank-Display nach OTA). Daher: I2C-Writes auf Touchcontroller-Adressen im `on_boot` vermeiden.
+
+## Compile-Troubleshooting: Leere Ausgabe trotz Fehler
+
+Wenn der Full-Compile mit exit 1 (oder 2) und völlig leerer Ausgabe fehlschlägt:
+
+1. **`/json-config` prüfen** – liefert detaillierte Fehler (YAML, C++ Lambda Syntax)
+2. **`/compile` mit `only_generate`** – exit 0 = YAML + Code-Generierung OK
+3. **Wenn `only_generate` exit 0, Full-Compile exit 1** → C++ Compile-Fehler (z.B. falsche API-Aufrufe in Lambdas). Die Fehlermeldungen erscheinen nicht im WebSocket-Output.
+4. **Minimal-Test:** Lambda durch `ESP_LOGI("tag", "msg")` ersetzen → wenn Compile dann klappt, liegt es am Lambda-Code.
+
+## Display-Update blockiert Touch-Responsiveness
+
+Bei Displays mit `update_interval` (z.B. 200ms) blockiert `id(display).update()` im `on_touch`-Lambda die Touch-Verarbeitung:
+
+- **Problem:** Jeder Touch triggert ein full Redraw (50-100ms bei QSPI 360×360). Währenddessen werden neue Touch-Interrupts nicht verarbeitet → schnelle Taps (Lautstärke) gehen verloren.
+- **Lösung (theoretisch):** `id(display).update()` aus `on_touch` entfernen. Die Aktions-Skripte haben bereits `component.update: display`. Das `update_interval` fängt den Rest.
+- **Problem in der Praxis:** Zusammen mit dem `on_boot`-Lambda zum CST816S Autosleep-Deaktivieren führte das Entfernen von `id(main_display).update()` zu einem Blank-Display. Nach Revert beider Änderungen funktioniert das Display wieder.
+- **Aktueller Stand:** `id(main_display).update()` ist wieder im `on_touch` enthalten. Touch-Responsiveness ist suboptimal, aber Display-Funktion hat Priorität.
+
+**Touch-Feedback:** `flash_counter` im Display-Lambda statt Force-Update – das Feedback kommt beim nächsten ohnehin fälligen Redraw.
+
+## Touch: CST816S Autosleep deaktivieren
+
+Der CST816S geht nach ~2s ohne Berührung in den Standby. Das verursacht:
+
+1. **Setup-Failure beim Boot** – Chip antwortet nicht auf I2C → `skip_probe: true` nötig
+2. **Verzögerung beim ersten Touch** – Chip muss aufwachen (~100-300ms)
+
+**AUTOSLEEP-DEAKTIVIERUNG NICHT EMPFOHLEN** – führt zu Blank-Display:
+
+Ein `on_boot`-Lambda, das per `bus_int->write(0x15, ...)` Register `0xFE = 0xFF` setzt, kann das Display komplett schwarz machen. Der I2C-Write auf den Touchcontroller während Boot stört vermutlich die Display-Initialisierung.
+
+Stattdessen: `skip_probe: true` belassen und die ~100-300ms Wake-up-Latenz des ersten Touchs in Kauf nehmen. Das Display bleibt dann sichtbar.
+
+**Nicht verwenden:**
+```yaml
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - lambda: |-
+          const uint8_t regval[] = {0xFE, 0xFF};
+          bus_int->write(0x15, regval, 2);
+```
+
 ## Template Number/Text: `optimistic` + `lambda` inkompatibel
 
 Bei `number.template` und `text.template` können `optimistic: true` und ein `lambda` **nicht** gleichzeitig verwendet werden.
